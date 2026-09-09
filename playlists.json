@@ -1,12 +1,7 @@
 [
 {
 "type": "guide",
-"note_1": "=== যারা কোডিং জানেন না, তাদের জন্য সহজ নিয়ম ===",
-"note_2": "১. পুরো প্লেলিস্ট (m3u) যোগ করতে: type এর ঘরে 'm3u' দিন এবং url এর ঘরে লিংটি বসান।",
-"note_3": "২. একটি মাত্র চ্যানেল (m3u8) যোগ করতে: type এর ঘরে 'single' দিন, name এ চ্যানেলের নাম এবং url এ m3u8 লিংকটি দিন।",
-"note_4": "৩. কাস্টম প্লেলিস্ট: আপনি চাইলে ২ নাম্বার নিয়মের মতো 'single' ব্লকটি কপি করে নিচে নিচে বসিয়ে নিজের পছন্দমত চ্যানেলের লিস্ট বানাতে পারেন।",
-"note_5": "৪. চালু/বন্ধ: status এর ঘরে 'on' দিলে সেটি অ্যাপে দেখাবে, 'off' দিলে সেটি অ্যাপে লুকানো থাকবে।",
-"status": "off"
+"note": "এখানে শুধু আপনার বা অন্যের তৈরি m3u প্লেলিস্টের লিংক দিন। status 'on' থাকলে লোড হবে, 'off' থাকলে হবে না। আপনি চাইলে একাধিক প্লেলিস্ট দিতে পারেন।"
 },
 {
 "type": "m3u",
@@ -15,23 +10,15 @@
 "status": "on"
 },
 {
-"type": "single",
-"name": "Custom Sports HD (Single m3u8 Demo)",
-"logo": "https://placehold.co/150x50/1e293b/FFFFFF?text=Sports+HD",
-"url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-"status": "off"
-},
-{
-"type": "single",
-"name": "Custom Movie Channel (Single m3u8 Demo)",
-"logo": "https://placehold.co/150x50/1e293b/FFFFFF?text=Movies",
-"url": "http://example.com/movie-stream.m3u8",
+"type": "m3u",
+"name": "My Custom Sports Playlist",
+"url": "./playlists/sports.m3u",
 "status": "off"
 },
 {
 "type": "m3u",
-"name": "Indian Channels List (m3u Demo)",
-"url": "https://iptv-org.github.io/iptv/countries/in.m3u",
+"name": "Another Provider Playlist",
+"url": "https://example.com/playlist.m3u",
 "status": "off"
 }
 ]
