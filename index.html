@@ -164,6 +164,20 @@
         .sidebar-item span { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; text-shadow: 1px 1px 4px rgba(0,0,0,1); font-weight: 600; }
 
         #main-loader { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 40px; }
+
+        .tv-focus {
+            transform: scale(1.08) !important;
+            background-color: var(--card-hover) !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.7) !important;
+            outline: none;
+            z-index: 10;
+        }
+        .sidebar-item.tv-focus {
+            background: rgba(56, 189, 248, 0.5) !important;
+            border-left: 4px solid #fff;
+            transform: scale(1.02) !important;
+        }
     </style>
 </head>
 <body>
@@ -228,6 +242,9 @@
         let isSidebarOpen = false;
         let interactionTimer;
         let toastTimeout;
+
+        let homeFocusIndex = 0;
+        let sidebarFocusIndex = 0;
 
         const loginView = document.getElementById('login-view');
         const homeView = document.getElementById('home-view');
@@ -350,7 +367,8 @@
 
         function createCardHTML(channel, isRecent = false) {
             const logoSrc = channel.logo || 'https://placehold.co/150x50/1e293b/FFFFFF?text=' + encodeURIComponent(channel.name);
-            const cardClass = isRecent ? 'recent-card' : 'channel-card';
+            // Added card-focusable class for TV remote tracking
+            const cardClass = isRecent ? 'recent-card card-focusable' : 'channel-card card-focusable';
             return `
                 <div class="${cardClass}" onclick="handleCardClick(${channel.index})">
                     <img src="${logoSrc}" class="channel-logo" alt="${channel.name}" onerror="this.src='https://placehold.co/150x50/1e293b/FFFFFF?text=Logo'">
@@ -380,6 +398,28 @@
                 });
             } else {
                 recentSection.style.display = 'none';
+            }
+            
+            setTimeout(() => {
+                if(!isPlayerOpen && homeView.style.display !== 'none') {
+                    updateHomeFocus();
+                }
+            }, 100);
+        }
+
+        function updateHomeFocus() {
+            const cards = document.querySelectorAll('.card-focusable');
+            if(!cards.length) return;
+            
+            cards.forEach(c => c.classList.remove('tv-focus'));
+            
+            if(homeFocusIndex >= cards.length) homeFocusIndex = cards.length - 1;
+            if(homeFocusIndex < 0) homeFocusIndex = 0;
+            
+            const focusedCard = cards[homeFocusIndex];
+            if(focusedCard) {
+                focusedCard.classList.add('tv-focus');
+                focusedCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
             }
         }
 
@@ -475,12 +515,31 @@
         function openSidebar() {
             isSidebarOpen = true;
             sidebar.classList.add('open');
+            
+            sidebarFocusIndex = currentPlayingIndex >= 0 ? currentPlayingIndex : 0;
+            updateSidebarFocus();
             resetInteractionTimer(); 
         }
 
         function closeSidebar() {
             isSidebarOpen = false;
             sidebar.classList.remove('open');
+        }
+
+        function updateSidebarFocus() {
+            const items = document.querySelectorAll('.sidebar-item');
+            if(!items.length) return;
+            
+            items.forEach(item => item.classList.remove('tv-focus'));
+            
+            if(sidebarFocusIndex >= items.length) sidebarFocusIndex = items.length - 1;
+            if(sidebarFocusIndex < 0) sidebarFocusIndex = 0;
+            
+            const focusedItem = items[sidebarFocusIndex];
+            if(focusedItem) {
+                focusedItem.classList.add('tv-focus');
+                focusedItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
 
         let touchStartX = 0, touchStartY = 0;
@@ -509,22 +568,85 @@
         playerView.addEventListener('mousemove', resetInteractionTimer);
 
         window.addEventListener('keydown', (e) => {
-            if (!isPlayerOpen) return; 
+            // 1. Handle Login Screen
+            if (loginView.style.display !== 'none') {
+                if (e.key === 'Enter') verifyPin();
+                return;
+            }
+
             resetInteractionTimer();
-            switch(e.key) {
-                case 'Escape':
-                case 'Backspace': closePlayer(); break;
-                case 'ArrowLeft': openSidebar(); break;
-                case 'ArrowRight': closeSidebar(); break;
-                case 'ArrowUp': 
-                    e.preventDefault(); 
-                    if (!isSidebarOpen) playChannel(currentPlayingIndex - 1 < 0 ? allChannels.length - 1 : currentPlayingIndex - 1);
-                    break;
-                case 'ArrowDown': 
-                    e.preventDefault();
-                    if (!isSidebarOpen) playChannel(currentPlayingIndex + 1 >= allChannels.length ? 0 : currentPlayingIndex + 1);
-                    break;
-                case 'Enter': if (isSidebarOpen) closeSidebar(); break;
+
+            // 2. Handle Home Screen Navigation (Grid)
+            if (!isPlayerOpen) {
+                const cards = document.querySelectorAll('.card-focusable');
+                if(!cards.length) return;
+
+                // Dynamically calculate columns for Up/Down movement
+                let cols = 1;
+                const gridCards = document.querySelectorAll('#all-channels-grid .card-focusable');
+                if(gridCards.length > 1) {
+                    const firstY = gridCards[0].offsetTop;
+                    for(let i=1; i<gridCards.length; i++) {
+                        if(gridCards[i].offsetTop > firstY) { cols = i; break; }
+                    }
+                }
+
+                switch(e.key) {
+                    case 'ArrowRight': e.preventDefault(); homeFocusIndex++; break;
+                    case 'ArrowLeft': e.preventDefault(); homeFocusIndex--; break;
+                    case 'ArrowDown': e.preventDefault(); homeFocusIndex += cols; break;
+                    case 'ArrowUp': e.preventDefault(); homeFocusIndex -= cols; break;
+                    case 'Enter': e.preventDefault(); cards[homeFocusIndex].click(); return;
+                }
+                updateHomeFocus();
+                return;
+            }
+
+            // 3. Handle Player Screen & Sidebar Navigation
+            if (isPlayerOpen) {
+                switch(e.key) {
+                    case 'Escape':
+                    case 'Backspace': 
+                        if (isSidebarOpen) closeSidebar(); 
+                        else closePlayer(); 
+                        break;
+                    
+                    case 'ArrowLeft': 
+                        if (!isSidebarOpen) openSidebar();
+                        break;
+                        
+                    case 'ArrowRight': 
+                        if (isSidebarOpen) closeSidebar();
+                        break;
+                        
+                    case 'ArrowUp': 
+                        e.preventDefault(); 
+                        if (isSidebarOpen) {
+                            sidebarFocusIndex--;
+                            updateSidebarFocus();
+                        } else {
+                            playChannel(currentPlayingIndex - 1 < 0 ? allChannels.length - 1 : currentPlayingIndex - 1);
+                        }
+                        break;
+                        
+                    case 'ArrowDown': 
+                        e.preventDefault();
+                        if (isSidebarOpen) {
+                            sidebarFocusIndex++;
+                            updateSidebarFocus();
+                        } else {
+                            playChannel(currentPlayingIndex + 1 >= allChannels.length ? 0 : currentPlayingIndex + 1);
+                        }
+                        break;
+
+                    case 'Enter':
+                        e.preventDefault();
+                        if (isSidebarOpen) {
+                            playChannel(sidebarFocusIndex);
+                            closeSidebar(); 
+                        }
+                        break;
+                }
             }
         });
 
