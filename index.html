@@ -1,290 +1,540 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Webview Mixed Content Fix (HTTP to HTTPS) -->
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    
-    <title id="page-title">Smart TV App</title>
-    
-    <!-- Lightweight CDNs -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.0/dist/hls.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Config File (Ensure this exists in the same directory) -->
-    <script src="config.js"></script>
+    <title>Live TV Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
     
     <style>
-        :root { --accent: #fbbf24; --focus: #00ffcc; --bg: #050505; --card: #111827; }
-        body { background-color: var(--bg); color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg-color: #0d131f;
+            --card-bg: #1e293b;
+            --card-hover: #2c3e50;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #e50914;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Hind Siliguri', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        #login-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0d131f 0%, #1a2235 100%);
+        }
+
+        .login-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(15px);
+            padding: 30px 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+            width: 90%;
+            max-width: 300px;
+        }
+
+        .login-card h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 6px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .pin-input:focus {
+            border-color: #38bdf8;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 10px;
+            background: #38bdf8;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            background: #0284c7;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        #login-error {
+            color: #f87171;
+            font-size: 12px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        #toast-container {
+            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9); color: white; padding: 10px 20px;
+            border-radius: 20px; font-size: 13px; z-index: 10000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            white-space: nowrap; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        #home-view { display: none; padding: 15px; min-height: 100vh; }
+        @media (min-width: 768px) { #home-view { padding: 25px; } }
+
+        /* Compact Header */
+        .header { display: flex; align-items: center; margin-bottom: 20px; }
+        .header h1 { font-size: 22px; font-weight: 700; }
+        .live-badge { background-color: var(--accent); color: white; font-size: 9px; font-weight: bold; padding: 2px 6px; border-radius: 4px; margin-left: 8px; position: relative; top: -5px; }
         
-        /* Layouts */
-        .sticky-top { position: sticky; top: 0; z-index: 50; background: var(--bg); box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
-        .video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-bottom: 2px solid var(--accent); }
-        .video-box video { width: 100%; height: 100%; object-fit: contain; }
+        .section-title { font-size: 15px; color: var(--text-main); margin-bottom: 10px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; }
+
+        #recent-channels-grid { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 8px; margin-bottom: 15px; scrollbar-width: none; }
+        #recent-channels-grid::-webkit-scrollbar { display: none; }
         
-        /* UI Elements */
-        .cat-btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; white-space: nowrap; transition: 0.2s; border: 2px solid transparent; background: var(--card); color: #9ca3af; }
-        .cat-btn.active { background: var(--accent); color: #000; }
+        /* Compact Cards */
+        .recent-card { flex: 0 0 75px; height: 60px; background-color: var(--card-bg); border-radius: 8px; padding: 4px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; border: 1px solid transparent;}
+        .recent-card:hover { border-color: #94a3b8; }
+        .recent-card .channel-logo { height: 22px; max-width: 80%; object-fit: contain; margin-bottom: 3px; }
+        .recent-card .channel-name { font-size: 9px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding-bottom: 30px; }
+        @media (min-width: 768px) { .channel-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; } }
+
+        .channel-card { background-color: var(--card-bg); border: 1px solid transparent; border-radius: 10px; padding: 10px 6px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 85px; overflow: hidden; transition: transform 0.2s; }
+        .channel-card:hover { transform: scale(1.03); background-color: var(--card-hover); border-color: #94a3b8; }
+        .channel-card .channel-logo { max-width: 85%; height: 35px; object-fit: contain; margin-bottom: 6px; }
+        .channel-card .channel-name { font-size: 11px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+
+        #player-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 1000; }
         
-        .channel-card { background: var(--card); border: 2px solid transparent; border-radius: 8px; padding: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
-        .channel-card img { width: 40px; height: 40px; object-fit: contain; background: #000; border-radius: 4px; padding: 2px; }
-        .channel-card.active { border-color: var(--accent); background: #1f2937; }
-        .channel-card.active h3 { color: var(--accent); }
+        video { width: 100vw; height: 100vh; object-fit: fill; background-color: #000; display: block; }
+
+        .player-overlay { position: absolute; top: 0; left: 0; right: 0; padding: 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); display: flex; align-items: center; z-index: 1010; transition: opacity 0.3s; }
         
-        /* 🔴 Smart TV Remote Focus 🔴 */
-        .tv-focus { border-color: var(--focus) !important; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4); transform: scale(1.05); background: #1f2937; z-index: 10; }
+        /* Back Arrow */
+        .back-btn { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; justify-content: center; align-items: center; transition: background 0.2s; margin-right: 12px; }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+        .current-channel-info { color: white; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); }
+
+        #sidebar { position: absolute; top: 0; left: 0; bottom: 0; width: 200px; background: transparent; z-index: 1020; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; padding-top: 60px; }
+        #sidebar.open { transform: translateX(0); }
+
+        .sidebar-list { flex: 1; overflow-y: auto; padding: 0 8px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
+        .sidebar-list::-webkit-scrollbar { width: 3px; }
+        .sidebar-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
         
-        /* Utilities */
-        .hide-scroll::-webkit-scrollbar { display: none; }
-        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .sidebar-item { display: flex; align-items: center; padding: 6px 8px; margin-bottom: 3px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .sidebar-item.active, .sidebar-item:hover { background: rgba(56, 189, 248, 0.4); }
+        .sidebar-item img { width: 24px; height: 18px; object-fit: contain; margin-right: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .sidebar-item span { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; text-shadow: 1px 1px 4px rgba(0,0,0,1); font-weight: 600; }
+
+        #main-loader { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 40px; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
-    
-    <div class="sticky-top w-full max-w-5xl mx-auto">
-        <!-- Header -->
-        <div class="flex justify-between items-center px-4 py-2 bg-[#0a0a0a]">
-            <div>
-                <h1 id="header-title" class="text-lg font-black text-[#fbbf24] uppercase tracking-wide">TV APP</h1>
-                <p id="now-playing" class="text-[10px] text-gray-400 uppercase tracking-widest">Select a channel...</p>
-            </div>
-            <div id="statusBadge" class="hidden px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded animate-pulse">LIVE</div>
-        </div>
-        
-        <!-- Player -->
-        <div class="video-box">
-            <video id="player" controls playsinline></video>
-            <div id="loader" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-[#fbbf24] text-xs font-bold">
-                <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i> BUFFERING...
-            </div>
-        </div>
-        
-        <!-- Categories -->
-        <div class="px-3 py-2 bg-[#0a0a0a] border-b border-gray-800">
-            <div id="categories" class="flex gap-2 overflow-x-auto hide-scroll pb-1"></div>
+<body>
+
+    <div id="toast-container"></div>
+
+    <!-- Login Screen -->
+    <div id="login-view">
+        <div class="login-card">
+            <h2>লগইন পিন দিন</h2>
+            <input type="password" id="pin-input" class="pin-input" placeholder="••••" autocomplete="new-password" maxlength="10">
+            <button class="login-btn" onclick="verifyPin()">প্রবেশ করুন</button>
+            <div id="login-error">ভুল পিন অথবা একাউন্ট বন্ধ আছে!</div>
         </div>
     </div>
 
-    <!-- Channels Grid -->
-    <div class="flex-1 w-full max-w-5xl mx-auto p-3 pb-12">
-        <div id="loadingMsg" class="text-center py-10 hidden text-gray-500 text-sm font-bold uppercase tracking-widest">
-            <i class="fas fa-sync fa-spin mr-2"></i> Loading Data...
+    <!-- Home Screen -->
+    <div id="home-view">
+        <div class="header">
+            <h1>লাইভ টিভি</h1>
+            <span class="live-badge">LIVE</span>
         </div>
-        <!-- Adaptive Grid: 2 cols on mobile, 3 on tablet, 4 on TV -->
-        <div id="channels" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"></div>
+
+        <div id="main-loader" style="display: none;">চ্যানেল লিস্ট লোড হচ্ছে... দয়া করে অপেক্ষা করুন...</div>
+
+        <!-- Recent Channels Section -->
+        <div id="recent-section" style="display: none;">
+            <div class="section-title">রিসেন্ট দেখা</div>
+            <div id="recent-channels-grid"></div>
+        </div>
+
+        <!-- All Channels Section -->
+        <div class="section-title">সব চ্যানেল</div>
+        <div id="all-channels-grid" class="channel-grid"></div>
+    </div>
+
+    <!-- Player Screen -->
+    <div id="player-view">
+        <video id="tv-player" playsinline></video>
+        
+        <div class="player-overlay" id="player-overlay">
+            <button class="back-btn" onclick="closePlayer()">&#8592;</button>
+            <div class="current-channel-info" id="current-channel-name">Channel Name</div>
+        </div>
+
+        <!-- Transparent Sidebar Drawer -->
+        <div id="sidebar">
+            <div class="sidebar-list" id="sidebar-list"></div>
+        </div>
     </div>
 
     <script>
-        // Fallback config if config.js fails
-        const CFG = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {
-            headerTitle: "SMART TV", developerName: "Dev",
-            categories: [{ name: "Live TV", url: "" }]
+        // Main Admin PIN
+        const MASTER_PIN = "1227085"; 
+        
+        let allChannels = [];
+        let recentUrls = JSON.parse(localStorage.getItem('tv_recent_v4')) || [];
+        
+        let hls = null;
+        let currentPlayingIndex = -1;
+        let isPlayerOpen = false;
+        let isSidebarOpen = false;
+        let interactionTimer;
+        let toastTimeout;
+
+        const loginView = document.getElementById('login-view');
+        const homeView = document.getElementById('home-view');
+        const playerView = document.getElementById('player-view');
+        const videoElement = document.getElementById('tv-player');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('player-overlay');
+        const mainLoader = document.getElementById('main-loader');
+
+        window.onload = () => {
+            const savedPin = localStorage.getItem('tv_user_pin');
+            if(savedPin) checkPinDatabase(savedPin);
         };
 
-        const App = {
-            data: [], hls: null, focusIdx: { zone: 0, index: 0 }, // zone 0: cat, 1: ch
-            colCount: 2, catEls: [], chEls: [],
+        document.getElementById('pin-input').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') verifyPin();
+        });
 
-            init() {
-                document.getElementById('header-title').innerText = CFG.headerTitle || 'TV';
-                this.els = {
-                    vid: document.getElementById('player'),
-                    cats: document.getElementById('categories'),
-                    grid: document.getElementById('channels'),
-                    load: document.getElementById('loadingMsg'),
-                    badge: document.getElementById('statusBadge'),
-                    loader: document.getElementById('loader'),
-                    playing: document.getElementById('now-playing')
-                };
+        async function verifyPin() {
+            const pin = document.getElementById('pin-input').value.trim();
+            if(!pin) return;
+            checkPinDatabase(pin);
+        }
 
-                this.calcColumns();
-                window.addEventListener('resize', () => { this.calcColumns(); this.updateTVFocus(); });
-                
-                this.renderCategories();
-                this.setupControls();
-                
-                // Event Delegation for Performance (Better for low RAM TVs)
-                this.els.grid.addEventListener('click', (e) => {
-                    const card = e.target.closest('.channel-card');
-                    if (card) {
-                        const idx = parseInt(card.dataset.idx);
-                        this.play(this.data[idx], card);
-                        this.setFocus(1, idx);
-                    }
-                });
-            },
-
-            calcColumns() {
-                const w = window.innerWidth;
-                this.colCount = w >= 1024 ? 5 : (w >= 768 ? 4 : (w >= 640 ? 3 : 2));
-            },
-
-            renderCategories() {
-                this.els.cats.innerHTML = '';
-                CFG.categories.forEach((cat, i) => {
-                    const btn = document.createElement('button');
-                    btn.className = `cat-btn ${i === 0 ? 'active' : ''}`;
-                    btn.innerText = cat.name;
-                    btn.onclick = () => {
-                        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        this.setFocus(0, i);
-                        this.loadData(cat.url);
-                    };
-                    this.els.cats.appendChild(btn);
-                });
-                
-                this.catEls = Array.from(this.els.cats.children);
-                if (CFG.categories.length > 0) this.loadData(CFG.categories[0].url);
-            },
-
-            async loadData(url) {
-                if(!url) return;
-                this.els.grid.innerHTML = '';
-                this.els.load.classList.remove('hidden');
-                this.data = [];
-                
-                try {
-                    const res = await fetch(url);
-                    const txt = await res.text();
-                    
-                    // Async parsing to prevent UI freeze
-                    setTimeout(() => { this.parseM3U(txt); }, 10);
-                } catch (e) {
-                    this.els.load.innerHTML = `<span class="text-red-500">Connection Failed!</span>`;
-                }
-            },
-
-            parseM3U(txt) {
-                const lines = txt.split('\n');
-                let itm = {};
-                for (let line of lines) {
-                    line = line.trim();
-                    if (line.startsWith('#EXTINF:')) {
-                        itm.name = line.split(',').pop()?.trim() || "Unknown";
-                        itm.logo = (line.match(/tvg-logo="([^"]*)"/) || [])[1] || "";
-                    } else if (line.startsWith('http')) {
-                        itm.url = line;
-                        this.data.push({ ...itm });
-                        itm = {};
-                    }
-                }
-                this.renderChannels();
-            },
-
-            renderChannels() {
-                let html = '';
-                this.data.forEach((ch, i) => {
-                    const img = ch.logo || `https://via.placeholder.com/80x80/111827/fbbf24?text=${ch.name.charAt(0)}`;
-                    html += `
-                        <div class="channel-card" data-idx="${i}">
-                            <img src="${img}" loading="lazy" onerror="this.src='https://via.placeholder.com/80x80/111827/fbbf24?text=TV'">
-                            <div class="flex-1 overflow-hidden">
-                                <h3 class="text-xs font-bold text-gray-200 line-clamp-1">${ch.name}</h3>
-                            </div>
-                        </div>`;
-                });
-                this.els.grid.innerHTML = html;
-                this.els.load.classList.add('hidden');
-                this.chEls = Array.from(this.els.grid.children);
-                
-                // Reset focus to top of grid when new data loads
-                if (this.focusIdx.zone === 1) this.setFocus(1, 0); 
-                
-                // Autoplay first channel if first load
-                if (this.data.length > 0 && !this.els.vid.src && !this.hls) {
-                    this.play(this.data[0], this.chEls[0]);
-                }
-            },
-
-            play(ch, el) {
-                document.querySelectorAll('.channel-card.active').forEach(e => e.classList.remove('active'));
-                if (el) el.classList.add('active');
-                
-                this.els.playing.innerText = ch.name;
-                this.els.badge.classList.add('hidden');
-                this.els.loader.classList.remove('hidden');
-                
-                if (Hls.isSupported()) {
-                    if (this.hls) this.hls.destroy();
-                    // TV Optimized HLS Settings (Low RAM usage)
-                    this.hls = new Hls({ maxBufferLength: 20, maxMaxBufferLength: 30 });
-                    this.hls.loadSource(ch.url);
-                    this.hls.attachMedia(this.els.vid);
-                    this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        this.els.vid.play().catch(e => console.log("Autoplay blocked"));
-                        this.els.badge.classList.remove('hidden');
-                        this.els.loader.classList.add('hidden');
-                    });
-                    this.hls.on(Hls.Events.ERROR, (e, data) => {
-                        if (data.fatal) this.els.loader.innerHTML = `<span class="text-red-500">Error playing stream</span>`;
-                    });
-                } else if (this.els.vid.canPlayType('application/vnd.apple.mpegurl')) {
-                    this.els.vid.src = ch.url;
-                    this.els.vid.play();
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            },
-
-            // --- 2D Smart TV Navigation Logic ---
-            setupControls() {
-                document.addEventListener('keydown', (e) => {
-                    const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'OK'];
-                    if (!keys.includes(e.key)) return;
-                    e.preventDefault();
-
-                    let { zone, index } = this.focusIdx;
-                    const maxCat = this.catEls.length - 1;
-                    const maxCh = this.chEls.length - 1;
-
-                    if (e.key === 'Enter' || e.key === 'OK') {
-                        if (zone === 0) this.catEls[index]?.click();
-                        else if (zone === 1) this.chEls[index]?.click();
-                        return;
-                    }
-
-                    if (zone === 0) { // In Categories
-                        if (e.key === 'ArrowRight' && index < maxCat) index++;
-                        else if (e.key === 'ArrowLeft' && index > 0) index--;
-                        else if (e.key === 'ArrowDown' && maxCh >= 0) { zone = 1; index = 0; }
-                    } 
-                    else if (zone === 1) { // In Channels
-                        if (e.key === 'ArrowRight' && index < maxCh) index++;
-                        else if (e.key === 'ArrowLeft' && index > 0) index--;
-                        else if (e.key === 'ArrowDown' && index + this.colCount <= maxCh) index += this.colCount;
-                        else if (e.key === 'ArrowUp') {
-                            if (index - this.colCount >= 0) index -= this.colCount;
-                            else { zone = 0; index = this.catEls.findIndex(c => c.classList.contains('active')); if(index<0) index=0; }
-                        }
-                    }
-
-                    this.setFocus(zone, index);
-                });
-            },
-
-            setFocus(zone, idx) {
-                this.focusIdx = { zone, index: idx };
-                this.updateTVFocus();
-            },
-
-            updateTVFocus() {
-                document.querySelectorAll('.tv-focus').forEach(el => el.classList.remove('tv-focus'));
-                const activeEl = this.focusIdx.zone === 0 
-                    ? this.catEls[this.focusIdx.index] 
-                    : this.chEls[this.focusIdx.index];
-                
-                if (activeEl) {
-                    activeEl.classList.add('tv-focus');
-                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                }
+        async function checkPinDatabase(pin) {
+            if(pin === MASTER_PIN) {
+                loginSuccess(pin);
+                return;
             }
-        };
 
-        document.addEventListener('DOMContentLoaded', () => App.init());
+            try {
+                const res = await fetch('users.json?v=' + Date.now());
+                const users = await res.json();
+                
+                if(users[pin] && users[pin].status === "on") {
+                    loginSuccess(pin);
+                } else {
+                    showLoginError();
+                }
+            } catch(e) {
+                showToast("ইন্টারনেট সমস্যা। আবার চেষ্টা করুন।");
+                showLoginError();
+            }
+        }
+
+        function loginSuccess(pin) {
+            localStorage.setItem('tv_user_pin', pin); 
+            loginView.style.display = 'none';
+            homeView.style.display = 'block';
+            mainLoader.style.display = 'block';
+            loadPlaylists();
+        }
+
+        function showLoginError() {
+            document.getElementById('login-error').style.display = 'block';
+            localStorage.removeItem('tv_user_pin');
+            loginView.style.display = 'flex';
+            homeView.style.display = 'none';
+        }
+
+        async function loadPlaylists() {
+            try {
+                const res = await fetch('playlists.json?v=' + Date.now());
+                const playlists = await res.json();
+                allChannels = [];
+
+                for (let item of playlists) {
+                    if (item.status !== "on") continue; // Skip guides and off items
+
+                    if (item.type === 'm3u') {
+                        await fetchM3U(item.url);
+                    } else if (item.type === 'single') {
+                        // Supports Custom single m3u8 playlists
+                        allChannels.push({
+                            index: allChannels.length,
+                            name: item.name,
+                            logo: item.logo || '',
+                            url: item.url
+                        });
+                    }
+                }
+                
+                mainLoader.style.display = 'none';
+                renderHomeGrids();
+                renderSidebarList();
+            } catch (error) {
+                mainLoader.innerText = "প্লেলিস্ট লোড করা যায়নি। playlists.json চেক করুন।";
+            }
+        }
+
+        async function fetchM3U(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.text();
+                const lines = data.split('\n');
+                let tempChannel = {};
+
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line.startsWith('#EXTINF')) {
+                        const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+                        tempChannel.logo = logoMatch ? logoMatch[1] : '';
+                        const nameParts = line.split(',');
+                        tempChannel.name = nameParts.length > 1 ? nameParts[nameParts.length - 1].trim() : 'Unknown';
+                    } 
+                    else if (line.startsWith('http')) {
+                        allChannels.push({
+                            index: allChannels.length,
+                            name: tempChannel.name || 'Unknown',
+                            logo: tempChannel.logo,
+                            url: line
+                        });
+                        tempChannel = {}; 
+                    }
+                }
+            } catch(e) {
+                console.log("Error loading m3u: " + url);
+            }
+        }
+
+        function createCardHTML(channel, isRecent = false) {
+            const logoSrc = channel.logo || 'https://placehold.co/150x50/1e293b/FFFFFF?text=' + encodeURIComponent(channel.name);
+            const cardClass = isRecent ? 'recent-card' : 'channel-card';
+            return `
+                <div class="${cardClass}" onclick="handleCardClick(${channel.index})">
+                    <img src="${logoSrc}" class="channel-logo" alt="${channel.name}" onerror="this.src='https://placehold.co/150x50/1e293b/FFFFFF?text=Logo'">
+                    <div class="channel-name">${channel.name}</div>
+                </div>
+            `;
+        }
+
+        function renderHomeGrids() {
+            const allGrid = document.getElementById('all-channels-grid');
+            const recentGrid = document.getElementById('recent-channels-grid');
+            const recentSection = document.getElementById('recent-section');
+
+            allGrid.innerHTML = '';
+            recentGrid.innerHTML = '';
+            
+            allChannels.forEach(channel => {
+                allGrid.innerHTML += createCardHTML(channel);
+            });
+
+            // Maintain correct order for recent viewing history
+            if (recentUrls.length > 0) {
+                recentSection.style.display = 'block';
+                recentUrls.forEach(url => {
+                    const channel = allChannels.find(c => c.url === url);
+                    if (channel) recentGrid.innerHTML += createCardHTML(channel, true);
+                });
+            } else {
+                recentSection.style.display = 'none';
+            }
+        }
+
+        function renderSidebarList() {
+            const list = document.getElementById('sidebar-list');
+            list.innerHTML = '';
+            allChannels.forEach(channel => {
+                const logoSrc = channel.logo || 'https://placehold.co/150x50/1e293b/FFFFFF?text=Logo';
+                list.innerHTML += `
+                    <div class="sidebar-item" id="sidebar-ch-${channel.index}" onclick="playChannel(${channel.index})">
+                        <img src="${logoSrc}" onerror="this.src='https://placehold.co/150x50/1e293b/FFFFFF?text=Logo'">
+                        <span>${channel.name}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function addToRecent(url) {
+            recentUrls = recentUrls.filter(u => u !== url); 
+            recentUrls.unshift(url); 
+            if (recentUrls.length > 10) recentUrls.pop();
+            localStorage.setItem('tv_recent_v4', JSON.stringify(recentUrls));
+            renderHomeGrids();
+        }
+
+        function handleCardClick(channelIndex) {
+            isPlayerOpen = true;
+            homeView.style.display = 'none';
+            playerView.style.display = 'block';
+            playChannel(channelIndex);
+        }
+
+        function closePlayer() {
+            isPlayerOpen = false;
+            homeView.style.display = 'block';
+            playerView.style.display = 'none';
+            closeSidebar();
+            
+            if (hls) hls.destroy();
+            videoElement.pause();
+            videoElement.removeAttribute('src');
+            videoElement.load();
+        }
+
+        function playChannel(index) {
+            if(index < 0 || index >= allChannels.length) return;
+            
+            currentPlayingIndex = index;
+            const channel = allChannels[index];
+            addToRecent(channel.url); 
+
+            document.getElementById('current-channel-name').innerText = channel.name;
+            
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            const activeSidebar = document.getElementById(`sidebar-ch-${index}`);
+            if(activeSidebar) {
+                activeSidebar.classList.add('active');
+                activeSidebar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // HLS.js logic works beautifully with both Single .m3u8 and M3U files
+            if (Hls.isSupported()) {
+                if(hls) hls.destroy();
+                hls = new Hls();
+                hls.loadSource(channel.url);
+                hls.attachMedia(videoElement);
+                hls.on(Hls.Events.MANIFEST_PARSED, function () { videoElement.play(); });
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) showToast("এই চ্যানেলটি এখন অফলাইন আছে ⚠️");
+                });
+            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = channel.url;
+                videoElement.addEventListener('loadedmetadata', function () { videoElement.play(); });
+                videoElement.addEventListener('error', function() { showToast("এই চ্যানেলটি এখন অফলাইন আছে ⚠️"); });
+            }
+            
+            resetInteractionTimer();
+        }
+
+        function resetInteractionTimer() {
+            if(!isPlayerOpen) return;
+            clearTimeout(interactionTimer);
+            overlay.style.opacity = '1';
+            
+            interactionTimer = setTimeout(() => {
+                if(isPlayerOpen) {
+                    overlay.style.opacity = '0';
+                    if (isSidebarOpen) closeSidebar();
+                }
+            }, 5000); 
+        }
+
+        function openSidebar() {
+            isSidebarOpen = true;
+            sidebar.classList.add('open');
+            resetInteractionTimer(); 
+        }
+
+        function closeSidebar() {
+            isSidebarOpen = false;
+            sidebar.classList.remove('open');
+        }
+
+        let touchStartX = 0, touchStartY = 0;
+        playerView.addEventListener('touchstart', e => {
+            if (e.target.closest('#sidebar') || e.target.closest('.player-overlay')) return;
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+            resetInteractionTimer();
+        }, {passive: true});
+
+        playerView.addEventListener('touchend', e => {
+            if (e.target.closest('#sidebar') || e.target.closest('.player-overlay')) return;
+            const diffX = e.changedTouches[0].screenX - touchStartX;
+            const diffY = e.changedTouches[0].screenY - touchStartY;
+            
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 50) openSidebar(); 
+                else if (diffX < -50) closeSidebar(); 
+            } else if (!isSidebarOpen) {
+                if (diffY > 50) playChannel(currentPlayingIndex - 1 < 0 ? allChannels.length - 1 : currentPlayingIndex - 1);
+                else if (diffY < -50) playChannel(currentPlayingIndex + 1 >= allChannels.length ? 0 : currentPlayingIndex + 1);
+            }
+            resetInteractionTimer();
+        }, {passive: true});
+
+        playerView.addEventListener('mousemove', resetInteractionTimer);
+
+        window.addEventListener('keydown', (e) => {
+            if (!isPlayerOpen) return; 
+            resetInteractionTimer();
+            switch(e.key) {
+                case 'Escape':
+                case 'Backspace': closePlayer(); break;
+                case 'ArrowLeft': openSidebar(); break;
+                case 'ArrowRight': closeSidebar(); break;
+                case 'ArrowUp': 
+                    e.preventDefault(); 
+                    if (!isSidebarOpen) playChannel(currentPlayingIndex - 1 < 0 ? allChannels.length - 1 : currentPlayingIndex - 1);
+                    break;
+                case 'ArrowDown': 
+                    e.preventDefault();
+                    if (!isSidebarOpen) playChannel(currentPlayingIndex + 1 >= allChannels.length ? 0 : currentPlayingIndex + 1);
+                    break;
+                case 'Enter': if (isSidebarOpen) closeSidebar(); break;
+            }
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-container');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.style.opacity = '0', 3000);
+        }
     </script>
 </body>
 </html>
