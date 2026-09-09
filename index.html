@@ -2,353 +2,288 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- স্মার্ট টিভি এবং মোবাইলের জন্য পারফেক্ট স্কেলিং -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Webview তে HTTP/HTTPS মিক্সড কন্টেন্ট প্লে হওয়ার জন্য এটি খুবই গুরুত্বপূর্ণ -->
+    <!-- Webview Mixed Content Fix (HTTP to HTTPS) -->
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     
-    <title id="page-title">Smart TV Box</title>
+    <title id="page-title">Smart TV App</title>
     
+    <!-- Lightweight CDNs -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.0/dist/hls.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- আপনার কনফিগ ফাইল -->
+    <!-- Config File (Ensure this exists in the same directory) -->
     <script src="config.js"></script>
     
     <style>
-        :root {
-            --focus-color: #fbbf24; /* সেট-টপ বক্সের মতো হলুদ ফোকাস */
-            --bg-color: #0f172a;
-        }
-        body { 
-            background-color: var(--bg-color); 
-            color: #e2e8f0; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            overflow-x: hidden; 
-            user-select: none; /* টিভিতে টেক্সট সিলেক্ট হওয়া বন্ধ করতে */
-        }
+        :root { --accent: #fbbf24; --focus: #00ffcc; --bg: #050505; --card: #111827; }
+        body { background-color: var(--bg); color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; user-select: none; -webkit-tap-highlight-color: transparent; }
         
-        .sticky-section { 
-            position: sticky; top: 0; z-index: 1000; 
-            background: var(--bg-color); 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9); 
-        }
+        /* Layouts */
+        .sticky-top { position: sticky; top: 0; z-index: 50; background: var(--bg); box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+        .video-box { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-bottom: 2px solid var(--accent); }
+        .video-box video { width: 100%; height: 100%; object-fit: contain; }
         
-        /* ভিডিও প্লেয়ার স্টাইল */
-        .video-container { 
-            position: relative; padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            background: #000; border-bottom: 4px solid var(--focus-color); 
-        }
-        .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; }
+        /* UI Elements */
+        .cat-btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; white-space: nowrap; transition: 0.2s; border: 2px solid transparent; background: var(--card); color: #9ca3af; }
+        .cat-btn.active { background: var(--accent); color: #000; }
         
-        /* ক্যাটাগরি বাটন */
-        .cat-btn { 
-            white-space: nowrap; padding: 10px 20px; border-radius: 8px; 
-            font-weight: bold; font-size: 14px; text-transform: uppercase; 
-            transition: all 0.2s ease; border: 3px solid transparent; 
-        }
-        .cat-active { background: var(--focus-color); color: #000; }
-        .cat-inactive { background: #1e293b; color: #94a3b8; }
+        .channel-card { background: var(--card); border: 2px solid transparent; border-radius: 8px; padding: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
+        .channel-card img { width: 40px; height: 40px; object-fit: contain; background: #000; border-radius: 4px; padding: 2px; }
+        .channel-card.active { border-color: var(--accent); background: #1f2937; }
+        .channel-card.active h3 { color: var(--accent); }
         
-        /* চ্যানেল কার্ড */
-        .channel-card { 
-            background: #1e293b; border-radius: 8px; 
-            border: 3px solid transparent; transition: all 0.15s ease-in-out;
-            display: flex; align-items: center; gap: 10px; padding: 8px;
-        }
-        .active-channel { background: #2a364a; border-left: 4px solid var(--focus-color); }
-        .active-channel h3 { color: var(--focus-color); }
-
-        /* 🔴 টিভি রিমোট ফোকাস (ম্যাজিক ইউআই) 🔴 */
-        .tv-focus { 
-            border-color: var(--focus-color) !important; 
-            transform: scale(1.08); 
-            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.4); 
-            background: #334155;
-            z-index: 50; 
-        }
-
-        /* স্ক্রলবার লুকানো কিন্তু স্ক্রল কাজ করবে */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* 🔴 Smart TV Remote Focus 🔴 */
+        .tv-focus { border-color: var(--focus) !important; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4); transform: scale(1.05); background: #1f2937; z-index: 10; }
+        
+        /* Utilities */
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
     
-    <!-- টপ সেকশন (ভিডিও + ক্যাটাগরি) -->
-    <div class="sticky-section w-full max-w-4xl mx-auto">
-        <div class="flex justify-between items-center px-4 py-2 bg-slate-900">
+    <div class="sticky-top w-full max-w-5xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center px-4 py-2 bg-[#0a0a0a]">
             <div>
-                <h1 id="header-title" class="text-xl font-black text-[#fbbf24] tracking-wide uppercase">App Name</h1>
-                <p id="now-playing-title" class="text-xs text-slate-400">Select a channel...</p>
+                <h1 id="header-title" class="text-lg font-black text-[#fbbf24] uppercase tracking-wide">TV APP</h1>
+                <p id="now-playing" class="text-[10px] text-gray-400 uppercase tracking-widest">Select a channel...</p>
             </div>
-            <div id="liveBadge" class="hidden px-2 py-1 bg-red-600 text-white text-[10px] font-bold rounded animate-pulse">LIVE</div>
+            <div id="statusBadge" class="hidden px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded animate-pulse">LIVE</div>
         </div>
         
-        <div class="video-container group">
+        <!-- Player -->
+        <div class="video-box">
             <video id="player" controls playsinline></video>
-            <div id="videoLoader" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/90 text-[#fbbf24] text-sm font-bold z-10">
-                <i class="fas fa-circle-notch fa-spin text-3xl mb-2"></i> 
-                <span>CONNECTING...</span>
+            <div id="loader" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-[#fbbf24] text-xs font-bold">
+                <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i> BUFFERING...
             </div>
         </div>
         
-        <div class="p-3 bg-slate-800">
-            <div id="categoryContainer" class="flex gap-3 overflow-x-auto pb-2 no-scrollbar" tv-nav-group="categories">
-                <!-- Categories load here -->
-            </div>
+        <!-- Categories -->
+        <div class="px-3 py-2 bg-[#0a0a0a] border-b border-gray-800">
+            <div id="categories" class="flex gap-2 overflow-x-auto hide-scroll pb-1"></div>
         </div>
     </div>
 
-    <!-- চ্যানেল লিস্ট সেকশন -->
-    <div class="flex-1 w-full max-w-4xl mx-auto p-3 pb-10">
-        <div id="listStatus" class="text-center py-10 hidden">
-            <i class="fas fa-spinner fa-spin text-slate-500 text-3xl mb-3"></i>
-            <p class="text-sm text-slate-400 tracking-widest">LOADING CHANNELS...</p>
+    <!-- Channels Grid -->
+    <div class="flex-1 w-full max-w-5xl mx-auto p-3 pb-12">
+        <div id="loadingMsg" class="text-center py-10 hidden text-gray-500 text-sm font-bold uppercase tracking-widest">
+            <i class="fas fa-sync fa-spin mr-2"></i> Loading Data...
         </div>
-        
-        <!-- গ্রিড লেআউট: মোবাইলে ২টা, টিভিতে ৪টা কলাম -->
-        <div id="channelGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3" tv-nav-group="channels"></div>
-        
-        <div class="mt-8 mb-4 border-t border-slate-800 pt-4 text-center">
-            <p class="text-[12px] text-slate-500">Press <span class="text-white border px-1 rounded">OK</span> to play • Use <span class="text-white border px-1 rounded">Arrows</span> to navigate</p>
-        </div>
+        <!-- Adaptive Grid: 2 cols on mobile, 3 on tablet, 4 on TV -->
+        <div id="channels" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"></div>
     </div>
 
     <script>
-        // ডিফল্ট ডামি কনফিগ (যদি config.js না থাকে বা লোড হতে দেরি হয়)
-        const DEFAULT_CONFIG = {
-            headerTitle: "Smart TV", developerName: "Developer",
-            categories: [{ name: "Live TV", url: "YOUR_M3U_URL_HERE" }]
+        // Fallback config if config.js fails
+        const CFG = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : {
+            headerTitle: "SMART TV", developerName: "Dev",
+            categories: [{ name: "Live TV", url: "" }]
         };
-        const cfg = typeof APP_CONFIG !== 'undefined' ? APP_CONFIG : DEFAULT_CONFIG;
 
         const App = {
-            data: [], hls: null, focusableItems: [], currentFocusIdx: 0,
-            colCount: 2, // ডিফল্ট কলাম (স্ক্রিন সাইজ অনুযায়ী আপডেট হবে)
-            
+            data: [], hls: null, focusIdx: { zone: 0, index: 0 }, // zone 0: cat, 1: ch
+            colCount: 2, catEls: [], chEls: [],
+
             init() {
-                document.getElementById('header-title').innerText = cfg.headerTitle || 'TV';
-                this.video = document.getElementById('player');
-                this.grid = document.getElementById('channelGrid');
-                this.catContainer = document.getElementById('categoryContainer');
+                document.getElementById('header-title').innerText = CFG.headerTitle || 'TV';
+                this.els = {
+                    vid: document.getElementById('player'),
+                    cats: document.getElementById('categories'),
+                    grid: document.getElementById('channels'),
+                    load: document.getElementById('loadingMsg'),
+                    badge: document.getElementById('statusBadge'),
+                    loader: document.getElementById('loader'),
+                    playing: document.getElementById('now-playing')
+                };
+
+                this.calcColumns();
+                window.addEventListener('resize', () => { this.calcColumns(); this.updateTVFocus(); });
                 
-                this.updateColumnCount();
-                window.addEventListener('resize', () => this.updateColumnCount());
+                this.renderCategories();
+                this.setupControls();
                 
-                this.buildCategories();
-                this.setupTVRemote();
-            },
-            
-            updateColumnCount() {
-                this.colCount = window.innerWidth >= 768 ? 4 : 2;
-            },
-            
-            buildCategories() {
-                this.catContainer.innerHTML = '';
-                cfg.categories.forEach((cat, index) => {
-                    const btn = document.createElement('button');
-                    btn.className = `cat-btn tv-item ${index === 0 ? 'cat-active' : 'cat-inactive'}`;
-                    btn.innerText = cat.name;
-                    btn.setAttribute('data-index', index);
-                    
-                    btn.onclick = () => {
-                        document.querySelectorAll('.cat-btn').forEach(b => {
-                            b.classList.remove('cat-active'); b.classList.add('cat-inactive');
-                        });
-                        btn.classList.add('cat-active'); btn.classList.remove('cat-inactive');
-                        this.loadPlaylist(cat.url);
-                    };
-                    this.catContainer.appendChild(btn);
+                // Event Delegation for Performance (Better for low RAM TVs)
+                this.els.grid.addEventListener('click', (e) => {
+                    const card = e.target.closest('.channel-card');
+                    if (card) {
+                        const idx = parseInt(card.dataset.idx);
+                        this.play(this.data[idx], card);
+                        this.setFocus(1, idx);
+                    }
                 });
-                
-                if(cfg.categories.length > 0) {
-                    this.loadPlaylist(cfg.categories[0].url);
-                }
             },
 
-            async loadPlaylist(url) {
-                this.grid.innerHTML = '';
+            calcColumns() {
+                const w = window.innerWidth;
+                this.colCount = w >= 1024 ? 5 : (w >= 768 ? 4 : (w >= 640 ? 3 : 2));
+            },
+
+            renderCategories() {
+                this.els.cats.innerHTML = '';
+                CFG.categories.forEach((cat, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = `cat-btn ${i === 0 ? 'active' : ''}`;
+                    btn.innerText = cat.name;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.setFocus(0, i);
+                        this.loadData(cat.url);
+                    };
+                    this.els.cats.appendChild(btn);
+                });
+                
+                this.catEls = Array.from(this.els.cats.children);
+                if (CFG.categories.length > 0) this.loadData(CFG.categories[0].url);
+            },
+
+            async loadData(url) {
+                if(!url) return;
+                this.els.grid.innerHTML = '';
+                this.els.load.classList.remove('hidden');
                 this.data = [];
-                document.getElementById('listStatus').classList.remove('hidden');
                 
                 try {
                     const res = await fetch(url);
-                    const text = await res.text();
+                    const txt = await res.text();
                     
-                    // Webview হ্যাং হওয়া এড়াতে M3U পার্সিং async করা হলো
-                    setTimeout(() => {
-                        this.parseM3U(text);
-                    }, 50);
+                    // Async parsing to prevent UI freeze
+                    setTimeout(() => { this.parseM3U(txt); }, 10);
                 } catch (e) {
-                    document.getElementById('listStatus').innerHTML = `<span class="text-red-500 font-bold">Network Error!</span>`;
+                    this.els.load.innerHTML = `<span class="text-red-500">Connection Failed!</span>`;
                 }
             },
 
-            parseM3U(text) {
-                const lines = text.split('\n');
-                let item = {};
-                lines.forEach(line => {
+            parseM3U(txt) {
+                const lines = txt.split('\n');
+                let itm = {};
+                for (let line of lines) {
                     line = line.trim();
-                    if(line.startsWith('#EXTINF:')) {
-                        const parts = line.split(',');
-                        item.name = parts[parts.length-1]?.trim() || "Unknown";
-                        const logo = line.match(/tvg-logo="([^"]*)"/);
-                        item.logo = logo ? logo[1] : null;
-                    } else if(line.startsWith('http')) {
-                        item.url = line;
-                        if(item.name && item.url) this.data.push({...item});
-                        item = {};
+                    if (line.startsWith('#EXTINF:')) {
+                        itm.name = line.split(',').pop()?.trim() || "Unknown";
+                        itm.logo = (line.match(/tvg-logo="([^"]*)"/) || [])[1] || "";
+                    } else if (line.startsWith('http')) {
+                        itm.url = line;
+                        this.data.push({ ...itm });
+                        itm = {};
                     }
-                });
+                }
                 this.renderChannels();
             },
 
             renderChannels() {
-                // DOM ফ্র্যাগমেন্ট ব্যবহার করে ফাস্ট রেন্ডারিং (Webview এর জন্য সেরা)
-                const frag = document.createDocumentFragment();
+                let html = '';
                 this.data.forEach((ch, i) => {
-                    const div = document.createElement('div');
-                    const logo = ch.logo || `https://via.placeholder.com/100x60/334155/fbbf24?text=TV`;
-                    
-                    div.className = "channel-card tv-item";
-                    div.setAttribute('data-index', cfg.categories.length + i);
-                    
-                    div.innerHTML = `
-                        <img src="${logo}" class="w-12 h-10 object-contain bg-black/50 rounded" loading="lazy" onerror="this.src='https://via.placeholder.com/100x60/334155/fbbf24?text=TV'">
-                        <div class="overflow-hidden w-full">
-                            <h3 class="text-[13px] font-bold text-slate-200 truncate">${ch.name}</h3>
-                        </div>
-                    `;
-                    div.onclick = () => this.playVideo(ch, div);
-                    frag.appendChild(div);
+                    const img = ch.logo || `https://via.placeholder.com/80x80/111827/fbbf24?text=${ch.name.charAt(0)}`;
+                    html += `
+                        <div class="channel-card" data-idx="${i}">
+                            <img src="${img}" loading="lazy" onerror="this.src='https://via.placeholder.com/80x80/111827/fbbf24?text=TV'">
+                            <div class="flex-1 overflow-hidden">
+                                <h3 class="text-xs font-bold text-gray-200 line-clamp-1">${ch.name}</h3>
+                            </div>
+                        </div>`;
                 });
+                this.els.grid.innerHTML = html;
+                this.els.load.classList.add('hidden');
+                this.chEls = Array.from(this.els.grid.children);
                 
-                this.grid.appendChild(frag);
-                document.getElementById('listStatus').classList.add('hidden');
+                // Reset focus to top of grid when new data loads
+                if (this.focusIdx.zone === 1) this.setFocus(1, 0); 
                 
-                this.refreshFocusableItems();
+                // Autoplay first channel if first load
+                if (this.data.length > 0 && !this.els.vid.src && !this.hls) {
+                    this.play(this.data[0], this.chEls[0]);
+                }
             },
 
-            playVideo(channel, element) {
-                document.querySelectorAll('.active-channel').forEach(e => e.classList.remove('active-channel'));
-                if(element) element.classList.add('active-channel');
+            play(ch, el) {
+                document.querySelectorAll('.channel-card.active').forEach(e => e.classList.remove('active'));
+                if (el) el.classList.add('active');
                 
-                document.getElementById('now-playing-title').innerText = "Playing: " + channel.name;
-                
-                const badge = document.getElementById('liveBadge');
-                const loader = document.getElementById('videoLoader');
-                badge.classList.add('hidden'); loader.classList.remove('hidden');
+                this.els.playing.innerText = ch.name;
+                this.els.badge.classList.add('hidden');
+                this.els.loader.classList.remove('hidden');
                 
                 if (Hls.isSupported()) {
                     if (this.hls) this.hls.destroy();
-                    this.hls = new Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 }); // Webview মেমরি অপটিমাইজ
-                    this.hls.loadSource(channel.url);
-                    this.hls.attachMedia(this.video);
-                    
+                    // TV Optimized HLS Settings (Low RAM usage)
+                    this.hls = new Hls({ maxBufferLength: 20, maxMaxBufferLength: 30 });
+                    this.hls.loadSource(ch.url);
+                    this.hls.attachMedia(this.els.vid);
                     this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        this.video.play().catch(e => console.log("Autoplay blocked"));
-                        badge.classList.remove('hidden'); loader.classList.add('hidden');
+                        this.els.vid.play().catch(e => console.log("Autoplay blocked"));
+                        this.els.badge.classList.remove('hidden');
+                        this.els.loader.classList.add('hidden');
                     });
-                    
                     this.hls.on(Hls.Events.ERROR, (e, data) => {
-                        if (data.fatal) {
-                            loader.innerHTML = `<span class="text-red-500"><i class="fas fa-exclamation-triangle"></i> Playback Error</span>`;
-                        }
+                        if (data.fatal) this.els.loader.innerHTML = `<span class="text-red-500">Error playing stream</span>`;
                     });
-                } else if (this.video.canPlayType('application/vnd.apple.mpegurl')) {
-                    this.video.src = channel.url;
-                    this.video.play();
+                } else if (this.els.vid.canPlayType('application/vnd.apple.mpegurl')) {
+                    this.els.vid.src = ch.url;
+                    this.els.vid.play();
                 }
-                
-                // ভিডিও প্লে করলে স্ক্রল করে উপরে নিয়ে যাবে
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
 
-            // ==========================================
-            // স্মার্ট টিভি রিমোট নেভিগেশন লজিক (2D Grid)
-            // ==========================================
-            refreshFocusableItems() {
-                this.focusableItems = Array.from(document.querySelectorAll('.tv-item'));
-                if(this.focusableItems.length > 0) {
-                    this.currentFocusIdx = 0;
-                    this.applyFocus();
-                }
-            },
-
-            setupTVRemote() {
+            // --- 2D Smart TV Navigation Logic ---
+            setupControls() {
                 document.addEventListener('keydown', (e) => {
-                    if (this.focusableItems.length === 0) return;
-                    
-                    const isCategory = this.focusableItems[this.currentFocusIdx].classList.contains('cat-btn');
-                    const catCount = document.querySelectorAll('.cat-btn').length;
+                    const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', 'OK'];
+                    if (!keys.includes(e.key)) return;
+                    e.preventDefault();
 
-                    let newIdx = this.currentFocusIdx;
+                    let { zone, index } = this.focusIdx;
+                    const maxCat = this.catEls.length - 1;
+                    const maxCh = this.chEls.length - 1;
 
-                    switch(e.key) {
-                        case 'ArrowRight':
-                            e.preventDefault();
-                            if(newIdx < this.focusableItems.length - 1) newIdx++;
-                            break;
-                            
-                        case 'ArrowLeft':
-                            e.preventDefault();
-                            if(newIdx > 0) newIdx--;
-                            break;
-                            
-                        case 'ArrowDown':
-                            e.preventDefault();
-                            if(isCategory) {
-                                // ক্যাটাগরি থেকে চ্যানেলে আসা
-                                newIdx = catCount; 
-                            } else {
-                                // গ্রিডের নিচের সারিতে যাওয়া
-                                if(newIdx + this.colCount < this.focusableItems.length) {
-                                    newIdx += this.colCount;
-                                }
-                            }
-                            break;
-                            
-                        case 'ArrowUp':
-                            e.preventDefault();
-                            if(!isCategory) {
-                                // গ্রিডের উপরের সারিতে যাওয়া
-                                if(newIdx - this.colCount >= catCount) {
-                                    newIdx -= this.colCount;
-                                } else {
-                                    // চ্যানেল থেকে ক্যাটাগরিতে ফেরত যাওয়া
-                                    newIdx = 0; 
-                                }
-                            }
-                            break;
-                            
-                        case 'Enter':
-                        case 'OK':
-                            e.preventDefault();
-                            this.focusableItems[this.currentFocusIdx].click();
-                            break;
+                    if (e.key === 'Enter' || e.key === 'OK') {
+                        if (zone === 0) this.catEls[index]?.click();
+                        else if (zone === 1) this.chEls[index]?.click();
+                        return;
                     }
 
-                    if (newIdx !== this.currentFocusIdx) {
-                        this.currentFocusIdx = newIdx;
-                        this.applyFocus();
+                    if (zone === 0) { // In Categories
+                        if (e.key === 'ArrowRight' && index < maxCat) index++;
+                        else if (e.key === 'ArrowLeft' && index > 0) index--;
+                        else if (e.key === 'ArrowDown' && maxCh >= 0) { zone = 1; index = 0; }
+                    } 
+                    else if (zone === 1) { // In Channels
+                        if (e.key === 'ArrowRight' && index < maxCh) index++;
+                        else if (e.key === 'ArrowLeft' && index > 0) index--;
+                        else if (e.key === 'ArrowDown' && index + this.colCount <= maxCh) index += this.colCount;
+                        else if (e.key === 'ArrowUp') {
+                            if (index - this.colCount >= 0) index -= this.colCount;
+                            else { zone = 0; index = this.catEls.findIndex(c => c.classList.contains('active')); if(index<0) index=0; }
+                        }
                     }
+
+                    this.setFocus(zone, index);
                 });
             },
 
-            applyFocus() {
-                this.focusableItems.forEach(el => el.classList.remove('tv-focus'));
-                const el = this.focusableItems[this.currentFocusIdx];
-                if(el) {
-                    el.classList.add('tv-focus');
-                    // স্ক্রিনের বাইরে চলে গেলে অটো-স্ক্রল করবে
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            setFocus(zone, idx) {
+                this.focusIdx = { zone, index: idx };
+                this.updateTVFocus();
+            },
+
+            updateTVFocus() {
+                document.querySelectorAll('.tv-focus').forEach(el => el.classList.remove('tv-focus'));
+                const activeEl = this.focusIdx.zone === 0 
+                    ? this.catEls[this.focusIdx.index] 
+                    : this.chEls[this.focusIdx.index];
+                
+                if (activeEl) {
+                    activeEl.classList.add('tv-focus');
+                    activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
                 }
             }
         };
 
-        // DOM লোড হলে অ্যাপ স্টার্ট
         document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
 </body>
