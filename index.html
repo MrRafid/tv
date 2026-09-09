@@ -15,7 +15,8 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent: #e50914;
-            --focus-ring: #38bdf8; /* TV Remote Focus Color */
+            --focus-ring: #38bdf8;
+            --recent-bg: #151e2e;
         }
 
         * {
@@ -34,94 +35,96 @@
             height: 100vh;
         }
 
-        /* --- Login Screen --- */
+        /* --- Login/Suspend Screen --- */
         #login-view {
             display: flex; align-items: center; justify-content: center;
             height: 100vh; background: linear-gradient(135deg, #0d131f 0%, #172033 100%);
+            position: absolute; top:0; left:0; width:100vw; z-index: 5000;
         }
 
         .login-card {
             background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px); padding: 30px 25px;
-            border-radius: 16px; text-align: center;
+            backdrop-filter: blur(10px); padding: 25px 20px;
+            border-radius: 12px; text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             border: 1px solid rgba(255,255,255,0.08);
-            width: 90%; max-width: 320px;
+            width: 90%; max-width: 280px;
         }
 
-        .login-card h2 { font-size: 20px; margin-bottom: 25px; font-weight: 700; color: #fff; }
+        .login-card h2 { font-size: 18px; margin-bottom: 20px; font-weight: 700; color: #fff; }
+        .login-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; }
 
         .pin-input {
-            width: 100%; padding: 12px; background: rgba(0,0,0,0.5);
+            width: 100%; padding: 10px; background: rgba(0,0,0,0.5);
             border: 2px solid #334155; border-radius: 8px; color: white;
-            font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 8px;
-            margin-bottom: 20px; outline: none; transition: all 0.3s;
+            font-size: 20px; font-weight: bold; text-align: center; letter-spacing: 5px;
+            margin-bottom: 15px; outline: none; transition: all 0.3s;
         }
         .pin-input:focus { border-color: var(--focus-ring); background: rgba(0,0,0,0.7); }
 
         .login-btn {
-            width: 100%; padding: 12px; background: var(--focus-ring); color: #000;
-            border: none; border-radius: 8px; font-size: 16px; font-weight: bold;
+            width: 100%; padding: 10px; background: var(--focus-ring); color: #000;
+            border: none; border-radius: 6px; font-size: 15px; font-weight: bold;
             cursor: pointer; transition: all 0.3s;
         }
         .login-btn:hover { background: #0284c7; color: white; transform: translateY(-2px); }
-        #login-error { color: #f87171; font-size: 13px; margin-top: 15px; display: none; }
+        #login-error { color: #f87171; font-size: 13px; margin-top: 10px; display: none; }
 
         /* --- Toasts --- */
         #toast-container {
-            position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9); color: white; padding: 12px 24px;
-            border-radius: 30px; font-size: 14px; z-index: 10000;
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9); color: white; padding: 10px 20px;
+            border-radius: 20px; font-size: 13px; z-index: 10000;
             opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
             box-shadow: 0 5px 20px rgba(0,0,0,0.6); font-weight: 600;
         }
 
         /* --- Home Screen --- */
-        #home-view { display: none; padding: 20px; height: 100vh; overflow-y: auto; }
-        @media (min-width: 768px) { #home-view { padding: 30px 40px; } }
+        #home-view { display: none; padding: 15px 20px; height: 100vh; overflow-y: auto; }
+        @media (min-width: 768px) { #home-view { padding: 25px 35px; } }
 
-        .header { display: flex; align-items: center; margin-bottom: 25px; }
-        .header h1 { font-size: 24px; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .header { display: flex; align-items: center; margin-bottom: 20px; }
+        .header h1 { font-size: 20px; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         .live-badge { 
-            background-color: var(--accent); color: white; font-size: 10px; 
-            font-weight: bold; padding: 3px 6px; border-radius: 4px; 
-            margin-left: 10px; position: relative; top: -6px; 
+            background-color: var(--accent); color: white; font-size: 9px; 
+            font-weight: bold; padding: 2px 5px; border-radius: 4px; 
+            margin-left: 8px; position: relative; top: -5px; 
             box-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
         }
         
-        .section-title { font-size: 16px; color: var(--text-main); margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;}
+        .section-title { font-size: 14px; color: var(--text-main); margin-bottom: 10px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;}
 
-        /* --- Unique Recent Channels Grid --- */
+        /* --- Recent Channels --- */
         #recent-channels-grid { 
-            display: flex; overflow-x: auto; gap: 12px; padding-bottom: 10px; margin-bottom: 25px; 
+            display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 20px; 
             scrollbar-width: none; 
         }
         #recent-channels-grid::-webkit-scrollbar { display: none; }
         
         .recent-card { 
             flex: 0 0 110px; height: 85px; 
-            background: linear-gradient(145deg, #1e293b, #151e2e); 
-            border: 1px solid rgba(56, 189, 248, 0.2); /* Unique Blue Border */
-            border-radius: 12px; padding: 6px; text-align: center; cursor: pointer; 
+            background: linear-gradient(145deg, #1e293b, var(--recent-bg)); 
+            border: 1px solid rgba(56, 189, 248, 0.4); 
+            border-radius: 10px; padding: 6px; text-align: center; cursor: pointer; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .recent-card .channel-logo { height: 35px; max-width: 85%; object-fit: contain; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));}
+        .recent-card .channel-logo { height: 32px; max-width: 80%; object-fit: contain; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));}
         .recent-card .channel-name { font-size: 11px; color: #e2e8f0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 
         /* --- All Channels Grid --- */
-        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; padding-bottom: 40px; }
-        @media (min-width: 768px) { .channel-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; } }
+        .channel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; padding-bottom: 40px; }
+        @media (min-width: 768px) { .channel-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; } }
 
         .channel-card { 
-            background-color: var(--card-bg); border: 2px solid transparent; border-radius: 12px; 
-            padding: 12px 8px; text-align: center; cursor: pointer; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; height: 95px; transition: all 0.2s; 
+            background-color: var(--card-bg); border: 2px solid transparent; border-radius: 10px; 
+            padding: 10px 8px; text-align: center; cursor: pointer; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; height: 85px; transition: all 0.2s; 
         }
-        .channel-card .channel-logo { max-width: 85%; height: 40px; object-fit: contain; margin-bottom: 8px; }
-        .channel-card .channel-name { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; font-weight: 600;}
+        .channel-card .channel-logo { max-width: 80%; height: 32px; object-fit: contain; margin-bottom: 6px; }
+        .channel-card .channel-name { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; font-weight: 600;}
 
-        /* --- TV Remote Focus Style for Cards --- */
+        /* --- TV Focus (Remote Navigation) --- */
         .tv-focus {
             transform: scale(1.08) !important;
             background-color: var(--card-hover) !important;
@@ -134,67 +137,73 @@
         #player-view { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 1000; }
         video { width: 100vw; height: 100vh; object-fit: fill; background-color: #000; display: block; }
 
-        .player-overlay { position: absolute; top: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); display: flex; align-items: center; z-index: 1010; transition: opacity 0.3s; }
+        .player-overlay { position: absolute; top: 0; left: 0; right: 0; padding: 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); display: flex; align-items: center; z-index: 1010; transition: opacity 0.3s; }
         
         .back-btn { 
-            background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); color: white; 
-            width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; 
-            display: flex; justify-content: center; align-items: center; transition: all 0.2s; margin-right: 15px; 
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; 
+            width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-size: 18px; 
+            display: flex; justify-content: center; align-items: center; transition: all 0.2s; margin-right: 12px; 
         }
         .back-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
-        .current-channel-info { color: white; font-size: 18px; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); }
+        .current-channel-info { color: white; font-size: 16px; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.9); }
 
         /* --- Sidebar (Channel List) --- */
         #sidebar { 
-            position: absolute; top: 0; left: 0; bottom: 0; width: 280px; 
-            background: rgba(0, 0, 0, 0.7); /* Deep Transparent */
+            position: absolute; top: 0; left: 0; bottom: 0; width: 260px; 
+            background: rgba(0, 0, 0, 0.85); 
             z-index: 1020; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex; flex-direction: column; padding-top: 80px; text-shadow: 1px 1px 4px rgba(0,0,0,1); 
+            display: flex; flex-direction: column; padding-top: 70px; text-shadow: 1px 1px 4px rgba(0,0,0,1); 
             box-shadow: 5px 0 25px rgba(0,0,0,0.8);
         }
         #sidebar.open { transform: translateX(0); }
 
-        .sidebar-list { flex: 1; overflow-y: auto; padding: 0 15px 20px 15px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
-        .sidebar-list::-webkit-scrollbar { width: 4px; }
-        .sidebar-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+        .sidebar-list { flex: 1; overflow-y: auto; padding: 0 10px 20px 10px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
+        .sidebar-list::-webkit-scrollbar { width: 3px; }
+        .sidebar-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
         
         .sidebar-item { 
-            display: flex; align-items: center; padding: 12px 15px; margin-bottom: 8px; 
-            border-radius: 10px; cursor: pointer; transition: all 0.2s; border-left: 4px solid transparent; 
+            display: flex; align-items: center; padding: 12px 10px; margin-bottom: 6px; 
+            border-radius: 8px; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; 
         }
-        .sidebar-item img { width: 45px; height: 30px; object-fit: contain; margin-right: 15px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
-        .sidebar-item span { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #cbd5e1; font-weight: 600; }
+        .sidebar-item img { width: 45px; height: 30px; object-fit: contain; margin-right: 12px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+        .sidebar-item span { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #cbd5e1; font-weight: 600; }
 
-        /* 1. Currently Playing Channel (Subtle Highlight) */
+        /* Currently Playing Channel Highlight */
         .sidebar-item.active { 
-            background: rgba(255, 255, 255, 0.1); 
-            border-left: 4px solid #94a3b8;
+            background: rgba(255, 255, 255, 0.08); 
+            border-left: 3px solid #94a3b8;
             color: #fff;
         }
 
-        /* 2. Remote/Keyboard Focus (Bright & Popping Highlight) */
+        /* Remote Focus Highlight (Pops Out for Sidebar) */
         .sidebar-item.tv-focus {
-            background: rgba(56, 189, 248, 0.7) !important;
-            border-left: 4px solid #fff !important;
+            background: rgba(56, 189, 248, 0.8) !important;
+            border-left: 3px solid #fff !important;
             transform: scale(1.05) !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             color: #fff !important;
         }
 
-        #main-loader { text-align: center; font-size: 15px; color: var(--focus-ring); margin-top: 50px; font-weight: bold; }
+        #main-loader { text-align: center; font-size: 13px; color: var(--focus-ring); margin-top: 40px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <!-- Login Screen -->
+    <!-- Login / Suspend Screen -->
     <div id="login-view">
-        <div class="login-card">
+        <div class="login-card" id="pin-section">
             <h2>পিন দিয়ে প্রবেশ করুন</h2>
             <input type="password" id="pin-input" class="pin-input" placeholder="••••" autocomplete="new-password" maxlength="10">
-            <button class="login-btn" onclick="verifyPin()">প্রবেশ করুন</button>
-            <div id="login-error">ভুল পিন অথবা একাউন্ট বন্ধ!</div>
+            <button class="login-btn" onclick="verifyPinInput()">প্রবেশ করুন</button>
+            <div id="login-error">ভুল পিন! আবার চেষ্টা করুন।</div>
+        </div>
+
+        <div class="login-card" id="blocked-section" style="display: none;">
+            <h2 style="color: #f87171;">অ্যাকাউন্ট সাসপেন্ড!</h2>
+            <p>অ্যাডমিন আপনার অ্যাকাউন্ট সাময়িকভাবে বন্ধ করেছেন। চালু হলে অটোমেটিক লগইন হবে।</p>
+            <button class="login-btn" onclick="checkAuthStatus(false)" style="margin-top:10px;">চেক করুন</button>
         </div>
     </div>
 
@@ -205,15 +214,15 @@
             <span class="live-badge">LIVE</span>
         </div>
 
-        <div id="main-loader" style="display: none;">চ্যানেল লিস্ট লোড হচ্ছে, অপেক্ষা করুন...</div>
+        <div id="main-loader" style="display: none;">চ্যানেল লিস্ট লোড হচ্ছে...</div>
 
-        <!-- Recent Channels Section -->
+        <!-- Recent Channels -->
         <div id="recent-section" style="display: none;">
             <div class="section-title">রিসেন্ট দেখা</div>
             <div id="recent-channels-grid"></div>
         </div>
 
-        <!-- All Channels Section -->
+        <!-- All Channels -->
         <div class="section-title">সব চ্যানেল</div>
         <div id="all-channels-grid" class="channel-grid"></div>
     </div>
@@ -224,7 +233,7 @@
         
         <div class="player-overlay" id="player-overlay">
             <button class="back-btn" onclick="closePlayer()">&#8592;</button>
-            <div class="current-channel-info" id="current-channel-name">Channel Name</div>
+            <div class="current-channel-info" id="current-channel-name">Channel</div>
         </div>
 
         <!-- Sidebar Drawer -->
@@ -236,19 +245,20 @@
     <script>
         const MASTER_PIN = "1227085"; 
         let allChannels = [];
-        let recentUrls = JSON.parse(localStorage.getItem('tv_recent_v6')) || [];
+        let recentUrls = JSON.parse(localStorage.getItem('tv_recent_v7')) || [];
         
         let hls = null;
         let currentPlayingIndex = -1;
         let isPlayerOpen = false;
         let isSidebarOpen = false;
         let interactionTimer;
-        let toastTimeout;
+        let autoCheckInterval;
 
-        let homeFocusIndex = 0;
         let sidebarFocusIndex = 0;
 
         const loginView = document.getElementById('login-view');
+        const pinSection = document.getElementById('pin-section');
+        const blockedSection = document.getElementById('blocked-section');
         const homeView = document.getElementById('home-view');
         const playerView = document.getElementById('player-view');
         const videoElement = document.getElementById('tv-player');
@@ -257,54 +267,97 @@
         const mainLoader = document.getElementById('main-loader');
 
         window.onload = () => {
-            const savedPin = localStorage.getItem('tv_user_pin');
-            if(savedPin) { checkPinDatabase(savedPin); }
-            else { document.getElementById('pin-input').focus(); }
+            checkAuthStatus(false);
+            // Optimized: Background check every 5 Minutes (300,000 ms) instead of 30 seconds
+            autoCheckInterval = setInterval(() => checkAuthStatus(true), 300000); 
         };
 
+        // --- AUTHENTICATION LOGIC ---
         document.getElementById('pin-input').addEventListener('keypress', function(e) {
-            if(e.key === 'Enter') verifyPin();
+            if(e.key === 'Enter') verifyPinInput();
         });
 
-        async function verifyPin() {
+        async function verifyPinInput() {
             const pin = document.getElementById('pin-input').value.trim();
             if(!pin) return;
-            checkPinDatabase(pin);
-        }
-
-        async function checkPinDatabase(pin) {
+            
             if(pin === MASTER_PIN) {
-                loginSuccess(pin);
+                savePinAndLogin(pin);
                 return;
             }
+
             try {
                 const res = await fetch('users.json?v=' + Date.now());
                 const users = await res.json();
                 
-                if(users[pin] && users[pin].status === "on") { loginSuccess(pin); } 
-                else { showLoginError(); }
+                if(users[pin]) {
+                    savePinAndLogin(pin); 
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
             } catch(e) {
-                showToast("ইন্টারনেট সমস্যা বা users.json পাওয়া যায়নি।");
-                showLoginError();
+                showToast("ইন্টারনেট সমস্যা।");
             }
         }
 
-        function loginSuccess(pin) {
-            localStorage.setItem('tv_user_pin', pin); 
-            loginView.style.display = 'none';
-            homeView.style.display = 'block';
-            mainLoader.style.display = 'block';
-            loadPlaylists();
+        function savePinAndLogin(pin) {
+            localStorage.setItem('tv_user_pin', pin);
+            document.getElementById('login-error').style.display = 'none';
+            checkAuthStatus(false);
         }
 
-        function showLoginError() {
-            document.getElementById('login-error').style.display = 'block';
-            localStorage.removeItem('tv_user_pin');
+        async function checkAuthStatus(isBackground = false) {
+            const savedPin = localStorage.getItem('tv_user_pin');
+            if(!savedPin) { showAuthScreen('pin'); return; }
+            if(savedPin === MASTER_PIN) { proceedToApp(isBackground); return; }
+
+            try {
+                const res = await fetch('users.json?v=' + Date.now());
+                const users = await res.json();
+                
+                if(!users[savedPin]) {
+                    localStorage.removeItem('tv_user_pin');
+                    if(isPlayerOpen) closePlayer();
+                    showAuthScreen('pin');
+                } 
+                else if(users[savedPin].status === "off") {
+                    if(isPlayerOpen) closePlayer();
+                    showAuthScreen('blocked');
+                } 
+                else if(users[savedPin].status === "on") {
+                    proceedToApp(isBackground);
+                }
+            } catch(e) {
+                if(!isBackground) showToast("সার্ভার চেক করা যাচ্ছে না।");
+            }
+        }
+
+        function showAuthScreen(type) {
             loginView.style.display = 'flex';
             homeView.style.display = 'none';
+            if(type === 'pin') {
+                pinSection.style.display = 'block';
+                blockedSection.style.display = 'none';
+                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-input').focus();
+            } else {
+                pinSection.style.display = 'none';
+                blockedSection.style.display = 'block';
+            }
         }
 
-        // Load Multiple Playlists Super Fast
+        function proceedToApp(isBackground) {
+            if(loginView.style.display !== 'none') {
+                loginView.style.display = 'none';
+                homeView.style.display = 'block';
+                if(allChannels.length === 0) {
+                    mainLoader.style.display = 'block';
+                    loadPlaylists();
+                }
+            }
+        }
+
+        // --- PLAYLIST LOADING ---
         async function loadPlaylists() {
             try {
                 const res = await fetch('playlists.json?v=' + Date.now());
@@ -315,10 +368,12 @@
                 await Promise.all(activePlaylists.map(playlist => fetchM3U(playlist.url)));
 
                 mainLoader.style.display = 'none';
+                if(allChannels.length === 0) { showToast("কোনো চ্যানেল পাওয়া যায়নি!"); return; }
+                
                 renderHomeGrids();
                 renderSidebarList();
             } catch (error) {
-                mainLoader.innerText = "প্লেলিস্ট লোড করা যায়নি। playlists.json ফাইল চেক করুন।";
+                mainLoader.innerText = "প্লেলিস্ট লোড করা যায়নি।";
             }
         }
 
@@ -347,9 +402,10 @@
                         tempChannel = {}; 
                     }
                 }
-            } catch(e) { console.error("Error loading m3u: " + url); }
+            } catch(e) { console.error("Error m3u: " + url); }
         }
 
+        // --- RENDERING ---
         function createCardHTML(channel, isRecent = false) {
             const logoSrc = channel.logo || 'https://placehold.co/150x50/1e293b/FFFFFF?text=' + encodeURIComponent(channel.name);
             const cardClass = isRecent ? 'recent-card card-focusable' : 'channel-card card-focusable';
@@ -364,14 +420,10 @@
             const recentGrid = document.getElementById('recent-channels-grid');
             const recentSection = document.getElementById('recent-section');
 
-            allGrid.innerHTML = ''; recentGrid.innerHTML = '';
-            
-            // Render All Channels
             let allHtml = '';
             allChannels.forEach(channel => { allHtml += createCardHTML(channel); });
             allGrid.innerHTML = allHtml;
 
-            // Render Recent Channels
             if (recentUrls.length > 0) {
                 recentSection.style.display = 'block';
                 let recentHtml = '';
@@ -380,16 +432,18 @@
                     if (channel) recentHtml += createCardHTML(channel, true);
                 });
                 recentGrid.innerHTML = recentHtml;
-            } else { recentSection.style.display = 'none'; }
+            } else { 
+                recentSection.style.display = 'none'; 
+            }
             
-            setTimeout(() => { if(!isPlayerOpen) updateHomeFocus(); }, 200);
+            setTimeout(() => { if(!isPlayerOpen) moveHomeFocus('none'); }, 200);
         }
 
         function addToRecent(url) {
             recentUrls = recentUrls.filter(u => u !== url); 
             recentUrls.unshift(url); 
-            if (recentUrls.length > 15) recentUrls.pop(); // Max 15 recent items
-            localStorage.setItem('tv_recent_v6', JSON.stringify(recentUrls));
+            if (recentUrls.length > 10) recentUrls.pop();
+            localStorage.setItem('tv_recent_v7', JSON.stringify(recentUrls));
             renderHomeGrids();
         }
 
@@ -408,21 +462,14 @@
             list.innerHTML = listHtml;
         }
 
-        function closePlayer() {
-            isPlayerOpen = false;
-            homeView.style.display = 'block';
-            playerView.style.display = 'none';
-            closeSidebar();
-            if (hls) hls.destroy();
-            videoElement.pause();
-            videoElement.removeAttribute('src');
-            videoElement.load();
-            setTimeout(updateHomeFocus, 100);
-        }
-
+        // --- PLAYER CONTROLS ---
         function playChannel(index) {
             if(index < 0 || index >= allChannels.length) return;
             
+            // Check auth status immediately before playing (Security)
+            checkAuthStatus(true); 
+            if(loginView.style.display !== 'none') return;
+
             if(!isPlayerOpen) {
                 isPlayerOpen = true;
                 homeView.style.display = 'none';
@@ -435,7 +482,7 @@
 
             document.getElementById('current-channel-name').innerText = channel.name;
             
-            // Update Active Status in Sidebar
+            // Sidebar Highlights
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             const activeSidebar = document.getElementById(`sidebar-ch-${index}`);
             if(activeSidebar) activeSidebar.classList.add('active');
@@ -459,6 +506,19 @@
             resetInteractionTimer();
         }
 
+        function closePlayer() {
+            isPlayerOpen = false;
+            homeView.style.display = 'block';
+            playerView.style.display = 'none';
+            closeSidebar();
+            if (hls) hls.destroy();
+            videoElement.pause();
+            videoElement.removeAttribute('src');
+            videoElement.load();
+            setTimeout(() => moveHomeFocus('none'), 100);
+        }
+
+        // --- SIDEBAR & INTERACTION ---
         function resetInteractionTimer() {
             if(!isPlayerOpen) return;
             clearTimeout(interactionTimer);
@@ -468,7 +528,7 @@
                     overlay.style.opacity = '0';
                     if (isSidebarOpen) closeSidebar();
                 }
-            }, 6000); 
+            }, 5000); 
         }
 
         function openSidebar() {
@@ -485,35 +545,58 @@
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('tv-focus'));
         }
 
-        // --- Spatial Navigation Logic for Home Screen (Perfected for TV) ---
-        function updateHomeFocus() {
-            const cards = document.querySelectorAll('.card-focusable');
+        // --- SMART SPATIAL TV NAVIGATION (Bug Fixed) ---
+        function moveHomeFocus(direction) {
+            const cards = Array.from(document.querySelectorAll('.card-focusable'));
             if(!cards.length) return;
-            cards.forEach(c => c.classList.remove('tv-focus'));
             
-            if(homeFocusIndex >= cards.length) homeFocusIndex = cards.length - 1;
-            if(homeFocusIndex < 0) homeFocusIndex = 0;
-            
-            const focusedCard = cards[homeFocusIndex];
-            if(focusedCard) {
-                focusedCard.classList.add('tv-focus');
-                focusedCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-            }
-        }
+            let currentIndex = cards.findIndex(c => c.classList.contains('tv-focus'));
+            if(currentIndex === -1) currentIndex = 0;
 
-        // Smart Column Calculation for ArrowUp / ArrowDown
-        function getGridJump() {
+            const isRecent = cards[currentIndex].classList.contains('recent-card');
+            const recentCount = document.querySelectorAll('.recent-card').length;
+            
+            // Calculate columns dynamically
             const grid = document.getElementById('all-channels-grid');
             const sampleCard = grid.querySelector('.channel-card');
-            if(!sampleCard) return 1;
-            // Calculate how many cards fit in one row dynamically
             const gridWidth = grid.offsetWidth;
-            const cardWidth = sampleCard.offsetWidth;
-            const gap = 12; // Gap size from CSS
-            return Math.floor((gridWidth + gap) / (cardWidth + gap)) || 1;
+            const cardWidth = sampleCard ? sampleCard.offsetWidth : 110;
+            const gap = 10; 
+            const cols = Math.floor((gridWidth + gap) / (cardWidth + gap)) || 1;
+
+            let nextIndex = currentIndex;
+
+            if (direction === 'ArrowRight') nextIndex++;
+            else if (direction === 'ArrowLeft') nextIndex--;
+            else if (direction === 'ArrowDown') {
+                if (isRecent) {
+                    // Jump exactly to the correct column in 'All Channels'
+                    nextIndex = recentCount + currentIndex; 
+                    if (nextIndex >= cards.length) nextIndex = cards.length - 1;
+                } else {
+                    nextIndex = currentIndex + cols;
+                }
+            } 
+            else if (direction === 'ArrowUp') {
+                if (!isRecent) {
+                    const indexInGrid = currentIndex - recentCount;
+                    if (indexInGrid < cols && recentCount > 0) {
+                        // Jump back to 'Recent' from the first row of All Channels
+                        nextIndex = Math.min(indexInGrid, recentCount - 1);
+                    } else {
+                        nextIndex = currentIndex - cols;
+                    }
+                }
+            }
+
+            if (nextIndex < 0) nextIndex = 0;
+            if (nextIndex >= cards.length) nextIndex = cards.length - 1;
+
+            cards.forEach(c => c.classList.remove('tv-focus'));
+            cards[nextIndex].classList.add('tv-focus');
+            cards[nextIndex].scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
         }
 
-        // --- Sidebar Navigation ---
         function updateSidebarFocus() {
             const items = document.querySelectorAll('.sidebar-item');
             if(!items.length) return;
@@ -529,7 +612,59 @@
             }
         }
 
-        // --- Touch & Swipe Controls ---
+        // --- KEYBOARD / REMOTE CONTROLS ---
+        window.addEventListener('keydown', (e) => {
+            if (loginView.style.display !== 'none') {
+                if (e.key === 'Enter' && pinSection.style.display !== 'none') verifyPinInput();
+                return;
+            }
+
+            resetInteractionTimer();
+
+            if (!isPlayerOpen) {
+                if (['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+                    e.preventDefault();
+                    moveHomeFocus(e.key);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const focused = document.querySelector('.card-focusable.tv-focus');
+                    if(focused) focused.click();
+                }
+                return;
+            }
+
+            if (isPlayerOpen) {
+                switch(e.key) {
+                    case 'Escape':
+                    case 'Backspace': 
+                        if (isSidebarOpen) closeSidebar(); 
+                        else closePlayer(); 
+                        break;
+                    case 'ArrowLeft': 
+                    case 'ArrowRight':
+                        // Dual Arrow Toggle Logic
+                        if (isSidebarOpen) closeSidebar();
+                        else openSidebar();
+                        break;
+                    case 'ArrowUp': 
+                        e.preventDefault(); 
+                        if (isSidebarOpen) { sidebarFocusIndex--; updateSidebarFocus(); } 
+                        else { playChannel(currentPlayingIndex - 1 < 0 ? allChannels.length - 1 : currentPlayingIndex - 1); }
+                        break;
+                    case 'ArrowDown': 
+                        e.preventDefault();
+                        if (isSidebarOpen) { sidebarFocusIndex++; updateSidebarFocus(); } 
+                        else { playChannel(currentPlayingIndex + 1 >= allChannels.length ? 0 : currentPlayingIndex + 1); }
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (isSidebarOpen) playChannel(sidebarFocusIndex);
+                        break;
+                }
+            }
+        });
+
+        // --- TOUCH / SWIPE CONTROLS ---
         let touchStartX = 0, touchStartY = 0;
         playerView.addEventListener('touchstart', e => {
             if (e.target.closest('#sidebar') || e.target.closest('.player-overlay')) return;
@@ -544,84 +679,21 @@
             const diffY = e.changedTouches[0].screenY - touchStartY;
             
             if (Math.abs(diffX) > Math.abs(diffY)) {
-                // Swipe Left / Right
-                if (diffX > 50) openSidebar(); 
-                else if (diffX < -50) closeSidebar(); 
+                if (Math.abs(diffX) > 50) {
+                    // Both left and right swipe will toggle the sidebar (Similar to button logic)
+                    if (isSidebarOpen) closeSidebar();
+                    else openSidebar();
+                }
             } else if (!isSidebarOpen) {
-                // Swipe Up / Down to Change Channel directly
                 if (diffY > 50) playChannel(currentPlayingIndex - 1 < 0 ? allChannels.length - 1 : currentPlayingIndex - 1);
                 else if (diffY < -50) playChannel(currentPlayingIndex + 1 >= allChannels.length ? 0 : currentPlayingIndex + 1);
             }
             resetInteractionTimer();
         }, {passive: true});
-
+        
         playerView.addEventListener('mousemove', resetInteractionTimer);
 
-        // --- Keyboard & TV Remote Controls ---
-        window.addEventListener('keydown', (e) => {
-            if (loginView.style.display !== 'none') {
-                if (e.key === 'Enter') verifyPin();
-                return;
-            }
-
-            resetInteractionTimer();
-
-            // Home Screen Navigation (Spatial Grid Logic)
-            if (!isPlayerOpen) {
-                const cards = document.querySelectorAll('.card-focusable');
-                if(!cards.length) return;
-
-                const cols = getGridJump();
-
-                switch(e.key) {
-                    case 'ArrowRight': e.preventDefault(); homeFocusIndex++; break;
-                    case 'ArrowLeft': e.preventDefault(); homeFocusIndex--; break;
-                    case 'ArrowDown': e.preventDefault(); homeFocusIndex += cols; break;
-                    case 'ArrowUp': e.preventDefault(); homeFocusIndex -= cols; break;
-                    case 'Enter': e.preventDefault(); cards[homeFocusIndex].click(); return;
-                }
-                updateHomeFocus();
-                return;
-            }
-
-            // Player & Sidebar Navigation
-            if (isPlayerOpen) {
-                switch(e.key) {
-                    case 'Escape':
-                    case 'Backspace': 
-                        if (isSidebarOpen) closeSidebar(); 
-                        else closePlayer(); 
-                        break;
-                    case 'ArrowLeft': 
-                        if (!isSidebarOpen) openSidebar();
-                        break;
-                    case 'ArrowRight': 
-                        if (isSidebarOpen) closeSidebar();
-                        break;
-                    case 'ArrowUp': 
-                        e.preventDefault(); 
-                        if (isSidebarOpen) {
-                            sidebarFocusIndex--; updateSidebarFocus();
-                        } else {
-                            playChannel(currentPlayingIndex - 1 < 0 ? allChannels.length - 1 : currentPlayingIndex - 1);
-                        }
-                        break;
-                    case 'ArrowDown': 
-                        e.preventDefault();
-                        if (isSidebarOpen) {
-                            sidebarFocusIndex++; updateSidebarFocus();
-                        } else {
-                            playChannel(currentPlayingIndex + 1 >= allChannels.length ? 0 : currentPlayingIndex + 1);
-                        }
-                        break;
-                    case 'Enter':
-                        e.preventDefault();
-                        if (isSidebarOpen) playChannel(sidebarFocusIndex);
-                        break;
-                }
-            }
-        });
-
+        let toastTimeout;
         function showToast(msg) {
             const toast = document.getElementById('toast-container');
             toast.innerText = msg;
