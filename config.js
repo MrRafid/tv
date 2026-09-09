@@ -1,39 +1,28 @@
 // config.js
 const APP_CONFIG = {
-    // অ্যাপের নাম 
-    appName: "Rafidul Islam | Live TV",
+    // আগেকার টিভির ফিল দেওয়ার জন্য নাম পরিবর্তন করা হলো
+    pageTitle: "CRT Smart TV",
+    headerTitle: "CRT TV",
+    headerSub: "Classic TV Experience",
+    developerName: "Admin",
     
-    // প্রক্সি সার্ভার (CORS সমস্যা সমাধানের জন্য)
-    proxy: "https://corsproxy.io/?",
-    
-    // ক্যাটাগরি এবং আইপিটিভি লিংক কন্ট্রোল
-    // এখানে আপনি যত খুশি ক্যাটাগরি বা লিংক এড/রিমুভ করতে পারবেন
+    // চ্যানেল ক্যাটাগরি এবং লিংক (সরাসরি গিটহাব থেকে লোড হবে, কোনো প্রক্সি ছাড়া)
     categories: [
         { 
-            id: "bd", 
-            name: "🇧🇩 বাংলাদেশ", 
+            name: "🇧🇩 BD", 
             url: "https://iptv-org.github.io/iptv/countries/bd.m3u" 
         },
         { 
-            id: "in", 
-            name: "🇮🇳 ইন্ডিয়া", 
+            name: "🇮🇳 India", 
             url: "https://iptv-org.github.io/iptv/countries/in.m3u" 
         },
         { 
-            id: "sports", 
-            name: "⚽ খেলাধুলা", 
-            url: "https://iptv-org.github.io/iptv/categories/sports.m3u" 
-        },
-        { 
-            id: "kids", 
-            name: "👶 কার্টুন", 
+            name: "👶 Kids", 
             url: "https://iptv-org.github.io/iptv/categories/kids.m3u" 
         },
         { 
-            id: "movies", 
-            name: "🎬 মুভি", 
-            url: "https://iptv-org.github.io/iptv/categories/movies.m3u" 
+            name: "⚽ Sports", 
+            url: "https://iptv-org.github.io/iptv/categories/sports.m3u" 
         }
     ]
 };
-
