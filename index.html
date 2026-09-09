@@ -1,80 +1,84 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rafidul TV</title>
-    <!-- Tailwind CSS এবং HLS.js লোড করা হচ্ছে -->
+    <title id="page-title">CRT Smart TV</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.0/dist/hls.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Config ফাইলটি কানেক্ট করা হলো -->
-    <script src="config.js"></script> 
+    <script src="config.js"></script>
     
     <style>
         body { background-color: #0b1120; color: #e2e8f0; font-family: 'Segoe UI', sans-serif; overflow-x: hidden; }
-        .sticky-section { position: sticky; top: 0; z-index: 1000; background: #0b1120; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
-        .video-container { position: relative; padding-bottom: 56.25%; background: black; border-bottom: 2px solid #fbbf24; }
+        .sticky-section { position: sticky; top: 0; z-index: 1000; background: #0b1120; box-shadow: 0 10px 30px rgba(0,0,0,0.9); border-bottom: 1px solid #1e293b; }
+        .video-container { position: relative; padding-bottom: 56.25%; background: black; border-bottom: 3px solid #fbbf24; }
         .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
-        /* বাটন ও চ্যানেল কার্ড ডিজাইন */
-        .cat-btn { white-space: nowrap; padding: 10px 16px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
-        .btn-active { background: #fbbf24; color: #000; box-shadow: 0 0 10px rgba(251, 191, 36, 0.4); }
+        .cat-btn { white-space: nowrap; padding: 10px 16px; border-radius: 6px; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s ease; border: 2px solid transparent; cursor: pointer; }
+        .btn-active { background: #fbbf24; color: #000; border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
         .btn-inactive { background: #1e293b; color: #94a3b8; }
         
-        .channel-card { background: #1e293b; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .channel-card { background: #1e293b; cursor: pointer; transition: transform 0.2s; border: 2px solid transparent; }
         
-        /* টিভির রিমোটের ফোকাস স্টাইল */
-        .tv-focus { border-color: #00ff00 !important; transform: scale(1.05); box-shadow: 0 0 15px #00ff00; z-index: 50; }
+        /* সিআরটি টিভির মতো স্পেশাল সবুজ ফোকাস (রিমোটের জন্য) */
+        .tv-focus { border-color: #00ff00 !important; transform: scale(1.05); box-shadow: 0 0 20px #00ff00; z-index: 50; background: #2a364a; }
         .active-channel { background: #252f47; border-color: #fbbf24; }
+        .active-channel h3 { color: #fbbf24; }
+        
+        .legal-text { font-size: 0.6rem; color: #475569; line-height: 1.4; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
     
-    <div class="sticky-section w-full max-w-4xl mx-auto">
-        <!-- হেডার -->
+    <div class="sticky-section w-full max-w-3xl mx-auto">
         <div class="flex justify-between items-center px-4 py-3 bg-slate-900">
-            <h1 id="app-title" class="text-xl font-black text-[#fbbf24] tracking-wider uppercase">Loading...</h1>
+            <div class="flex flex-col">
+                <h1 id="header-title" class="text-xl font-black text-[#fbbf24] tracking-wider uppercase leading-none">Title</h1>
+                <span id="header-sub" class="text-[10px] text-slate-400 tracking-widest uppercase">Subtitle</span>
+            </div>
             <div id="liveBadge" class="hidden px-2 py-0.5 bg-red-600 text-white text-[10px] font-bold rounded animate-pulse">LIVE</div>
         </div>
         
-        <!-- ভিডিও প্লেয়ার -->
         <div class="video-container group">
-            <video id="player" controls playsinline></video>
+            <video id="player" controls playsinline poster="https://via.placeholder.com/640x360/000000/fbbf24?text=CRT+Smart+TV"></video>
             <div id="videoLoader" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 text-[#fbbf24] text-xs font-bold z-10">
                 <i class="fas fa-circle-notch fa-spin mr-2"></i> BUFFERING...
             </div>
         </div>
         
-        <!-- ডাইনামিক ক্যাটাগরি মেনু -->
         <div class="p-3 bg-slate-800 space-y-3">
-            <div id="categoryContainer" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar focusable-area">
-                <!-- config.js থেকে বাটনগুলো এখানে অটোমেটিক তৈরি হবে -->
+            <div id="categoryContainer" class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                <!-- Categories will load here -->
             </div>
         </div>
     </div>
 
-    <!-- চ্যানেল লিস্ট -->
-    <div class="flex-1 w-full max-w-4xl mx-auto p-2 pb-10">
-        <div id="listStatus" class="text-center py-10 hidden text-slate-400 text-sm">
-            <i class="fas fa-sync fa-spin mb-2"></i> Loading Channels...
+    <div class="flex-1 w-full max-w-3xl mx-auto p-2 pb-10">
+        <div id="listStatus" class="text-center py-10 hidden">
+            <i class="fas fa-sync fa-spin text-slate-500 mb-2"></i>
+            <p class="text-xs text-slate-500 uppercase tracking-widest">Loading Channels...</p>
         </div>
-        <div id="channelGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3 focusable-area"></div>
         
-        <!-- ফুটার -->
+        <div id="channelGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+        
         <div class="mt-8 mb-4 border-t border-slate-800 pt-4 px-4 text-center">
-            <p class="text-[12px] text-slate-400 font-bold mb-2">Developed by <span class="text-[#fbbf24]">রাফিদুল ইসলাম</span></p>
+            <p class="text-[11px] text-slate-400 font-bold mb-2">Developed by <span id="dev-name" class="text-[#fbbf24]">Name</span></p>
         </div>
     </div>
 
     <script>
         const App = {
-            data: [], hls: null, currentFocusIndex: -1, focusableElements: [],
+            data: [], hls: null, currentFocusIndex: -1, focusableElements: [], isFirstLoad: true,
             
             init() {
-                // Config থেকে নাম সেট করা
-                document.getElementById('app-title').innerText = APP_CONFIG.appName;
+                document.getElementById('page-title').innerText = APP_CONFIG.pageTitle;
+                document.getElementById('header-title').innerText = APP_CONFIG.headerTitle;
+                document.getElementById('header-sub').innerText = APP_CONFIG.headerSub;
+                document.getElementById('dev-name').innerText = APP_CONFIG.developerName;
+                
                 this.video = document.getElementById('player');
                 this.grid = document.getElementById('channelGrid');
                 this.status = document.getElementById('listStatus');
@@ -84,7 +88,6 @@
                 this.setupTVRemote();
             },
             
-            // Config থেকে বাটন তৈরি করা
             buildCategories() {
                 APP_CONFIG.categories.forEach((cat, index) => {
                     const btn = document.createElement('button');
@@ -97,25 +100,26 @@
                     };
                     this.catContainer.appendChild(btn);
                 });
-                // প্রথম ক্যাটাগরি ডিফল্টভাবে লোড করা
-                if(APP_CONFIG.categories.length > 0) this.loadPlaylist(APP_CONFIG.categories[0].url);
+                
+                if(APP_CONFIG.categories.length > 0) {
+                    this.loadPlaylist(APP_CONFIG.categories[0].url);
+                }
             },
 
+            // প্রক্সি ছাড়া ডিরেক্ট ফেচ করা হলো
             async loadPlaylist(url) {
                 this.grid.innerHTML = '';
                 this.status.classList.remove('hidden');
                 this.data = [];
-                
                 try {
-                    const res = await fetch(APP_CONFIG.proxy + encodeURIComponent(url));
+                    const res = await fetch(url);
                     const text = await res.text();
                     this.parseM3U(text);
                 } catch (e) {
-                    this.status.innerHTML = `<span class="text-red-500">Error loading. Check Internet.</span>`;
+                    this.status.innerHTML = `<span class="text-red-500 font-bold">Error loading channels. Check Internet.</span>`;
                 }
             },
 
-            // m3u ফাইল থেকে চ্যানেল আলাদা করা
             parseM3U(text) {
                 const lines = text.split('\n');
                 let item = {};
@@ -125,7 +129,9 @@
                         const parts = line.split(',');
                         item.name = parts[parts.length-1].trim();
                         const logo = line.match(/tvg-logo="([^"]*)"/);
-                        item.logo = logo ? logo[1] : 'https://via.placeholder.com/60x60/334155/fbbf24?text=TV';
+                        item.logo = logo ? logo[1] : null;
+                        const grp = line.match(/group-title="([^"]*)"/);
+                        item.group = grp ? grp[1] : 'General';
                     } else if(line.startsWith('http')) {
                         item.url = line;
                         if(item.name && item.url) this.data.push({...item});
@@ -140,17 +146,30 @@
                 const frag = document.createDocumentFragment();
                 this.data.forEach((ch, index) => {
                     const div = document.createElement('div');
+                    const logo = ch.logo || `https://via.placeholder.com/60x60/334155/fbbf24?text=${ch.name[0]}`;
                     div.className = "channel-card tv-item p-2 rounded-lg flex items-center gap-3";
-                    div.innerHTML = `<img src="${ch.logo}" class="w-10 h-10 object-contain rounded" loading="lazy">
-                                     <h3 class="text-xs font-bold text-slate-200 truncate">${ch.name}</h3>`;
+                    div.innerHTML = `
+                        <img src="${logo}" class="w-10 h-10 object-contain bg-black/30 rounded p-0.5" loading="lazy" onerror="this.src='https://via.placeholder.com/40'">
+                        <div class="overflow-hidden">
+                            <h3 class="text-xs font-bold text-slate-200 truncate">${ch.name}</h3>
+                            <p class="text-[9px] text-slate-500 truncate uppercase tracking-wider">${ch.group}</p>
+                        </div>
+                    `;
                     div.onclick = () => this.playVideo(ch.url, div);
                     frag.appendChild(div);
                 });
                 this.grid.appendChild(frag);
                 this.status.classList.add('hidden');
                 this.updateFocusableElements();
+
+                // সিআরটি টিভির মতো অটো প্লে (লিস্ট লোড হলে প্রথম চ্যানেলটি নিজে থেকেই চলতে শুরু করবে)
+                if(this.isFirstLoad && this.data.length > 0) {
+                    this.playVideo(this.data[0].url, this.grid.firstChild);
+                    this.isFirstLoad = false;
+                }
             },
 
+            // প্রক্সি ছাড়া ভিডিও প্লে করার লজিক
             playVideo(url, el) {
                 document.querySelectorAll('.active-channel').forEach(e => e.classList.remove('active-channel'));
                 if(el) el.classList.add('active-channel');
@@ -162,24 +181,27 @@
                 if (Hls.isSupported()) {
                     if (this.hls) this.hls.destroy();
                     this.hls = new Hls();
-                    this.hls.loadSource(APP_CONFIG.proxy + encodeURIComponent(url));
+                    this.hls.loadSource(url); // ডিরেক্ট URL
                     this.hls.attachMedia(this.video);
                     this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
                         this.video.play();
                         badge.classList.remove('hidden'); loader.classList.add('hidden');
                     });
+                    this.hls.on(Hls.Events.ERROR, (event, data) => {
+                         if (data.fatal) {
+                             loader.innerHTML = `<span class="text-red-500">App Required to Play</span>`;
+                         }
+                    });
                 } else if (this.video.canPlayType('application/vnd.apple.mpegurl')) {
-                    this.video.src = url;
+                    this.video.src = url; // ডিরেক্ট URL
                     this.video.play();
                 }
-                
-                // প্লে করার পর ভিডিও প্লেয়ারে ফোকাস নিয়ে যাওয়া
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             },
 
-            // টিভির রিমোট কন্ট্রোল লজিক
             updateFocusableElements() {
                 this.focusableElements = document.querySelectorAll('.tv-item');
+                this.currentFocusIndex = -1;
             },
 
             setupTVRemote() {
@@ -187,12 +209,15 @@
                     if (this.focusableElements.length === 0) return;
                     
                     if (['ArrowRight', 'ArrowDown'].includes(e.key)) {
+                        e.preventDefault();
                         this.currentFocusIndex = (this.currentFocusIndex + 1) % this.focusableElements.length;
                         this.applyFocus();
                     } else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) {
+                        e.preventDefault();
                         this.currentFocusIndex = (this.currentFocusIndex - 1 + this.focusableElements.length) % this.focusableElements.length;
                         this.applyFocus();
-                    } else if (e.key === 'Enter') {
+                    } else if (e.key === 'Enter' || e.key === 'OK') {
+                        e.preventDefault();
                         if (this.currentFocusIndex >= 0) this.focusableElements[this.currentFocusIndex].click();
                     }
                 });
