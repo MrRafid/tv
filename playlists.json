@@ -7,13 +7,13 @@
 "type": "m3u",
 "name": "Bangladesh All Channels",
 "url": "https://iptv-org.github.io/iptv/countries/bd.m3u",
-"status": "on"
+"status": "off"
 },
 {
 "type": "m3u",
 "name": "My Custom Sports Playlist",
-"url": "./playlists/sports.m3u",
-"status": "off"
+"url": "bd_in_free.m3u",
+"status": "on"
 },
 {
 "type": "m3u",
