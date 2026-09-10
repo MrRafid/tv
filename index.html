@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <title>Live TV Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
@@ -266,10 +267,17 @@
         const overlay = document.getElementById('player-overlay');
         const mainLoader = document.getElementById('main-loader');
 
+        // Smart Cache Functions
+        function getAuthCacheVersion() {
+            return Math.floor(Date.now() / 120000); // ২ মিনিট ক্যাশ
+        }
+        function getPlaylistCacheVersion() {
+            return Math.floor(Date.now() / 900000); // ১৫ মিনিট ক্যাশ
+        }
+
         window.onload = () => {
             checkAuthStatus(false);
-            // Optimized: Background check every 5 Minutes (300,000 ms) instead of 30 seconds
-            autoCheckInterval = setInterval(() => checkAuthStatus(true), 300000); 
+            autoCheckInterval = setInterval(() => checkAuthStatus(true), 300000); // ৫ মিনিট পর পর চেক
         };
 
         // --- AUTHENTICATION LOGIC ---
@@ -287,7 +295,7 @@
             }
 
             try {
-                const res = await fetch('users.json?v=' + Date.now());
+                const res = await fetch('users.json?v=' + getAuthCacheVersion());
                 const users = await res.json();
                 
                 if(users[pin]) {
@@ -312,7 +320,7 @@
             if(savedPin === MASTER_PIN) { proceedToApp(isBackground); return; }
 
             try {
-                const res = await fetch('users.json?v=' + Date.now());
+                const res = await fetch('users.json?v=' + getAuthCacheVersion());
                 const users = await res.json();
                 
                 if(!users[savedPin]) {
@@ -360,7 +368,7 @@
         // --- PLAYLIST LOADING ---
         async function loadPlaylists() {
             try {
-                const res = await fetch('playlists.json?v=' + Date.now());
+                const res = await fetch('playlists.json?v=' + getPlaylistCacheVersion());
                 const playlists = await res.json();
                 allChannels = [];
 
@@ -379,7 +387,8 @@
 
         async function fetchM3U(url) {
             try {
-                const response = await fetch(url);
+                const fetchUrl = url.includes('?') ? `${url}&v=${getPlaylistCacheVersion()}` : `${url}?v=${getPlaylistCacheVersion()}`;
+                const response = await fetch(fetchUrl);
                 const data = await response.text();
                 const lines = data.split('\n');
                 let tempChannel = {};
@@ -410,7 +419,7 @@
             const logoSrc = channel.logo || 'https://placehold.co/150x50/1e293b/FFFFFF?text=' + encodeURIComponent(channel.name);
             const cardClass = isRecent ? 'recent-card card-focusable' : 'channel-card card-focusable';
             return `<div class="${cardClass}" onclick="playChannel(${channel.index})">
-                        <img src="${logoSrc}" class="channel-logo" onerror="this.src='https://placehold.co/150x50/1e293b/FFFFFF?text=Logo'">
+                        <img src="${logoSrc}" class="channel-logo" loading="lazy" onerror="this.src='https://placehold.co/150x50/1e293b/FFFFFF?text=Logo'">
                         <div class="channel-name">${channel.name}</div>
                     </div>`;
         }
@@ -454,7 +463,7 @@
                 const logoSrc = channel.logo || 'https://placehold.co/150x50/1e293b/FFFFFF?text=Logo';
                 listHtml += `
                     <div class="sidebar-item" id="sidebar-ch-${channel.index}" onclick="playChannel(${channel.index})">
-                        <img src="${logoSrc}" onerror="this.src='https://placehold.co/150x50/1e293b/FFFFFF?text=Logo'">
+                        <img src="${logoSrc}" loading="lazy" onerror="this.src='https://placehold.co/150x50/1e293b/FFFFFF?text=Logo'">
                         <span>${channel.name}</span>
                     </div>
                 `;
@@ -462,11 +471,10 @@
             list.innerHTML = listHtml;
         }
 
-        // --- PLAYER CONTROLS ---
+        // --- PLAYER CONTROLS (With Auto-Recovery) ---
         function playChannel(index) {
             if(index < 0 || index >= allChannels.length) return;
             
-            // Check auth status immediately before playing (Security)
             checkAuthStatus(true); 
             if(loginView.style.display !== 'none') return;
 
@@ -489,17 +497,46 @@
 
             if (Hls.isSupported()) {
                 if(hls) hls.destroy();
-                hls = new Hls();
+                
+                // HLS Configuration for maximum resilience
+                hls = new Hls({
+                    maxLoadingDelay: 4,
+                    manifestLoadingMaxRetry: 5, // বারবার ট্রাই করবে
+                    levelLoadingMaxRetry: 5,
+                    fragLoadingMaxRetry: 5
+                });
+
                 hls.loadSource(channel.url);
                 hls.attachMedia(videoElement);
-                hls.on(Hls.Events.MANIFEST_PARSED, function () { videoElement.play(); });
-                hls.on(Hls.Events.ERROR, function (event, data) {
-                    if (data.fatal) showToast("এই চ্যানেলটি এখন অফলাইন আছে ⚠️");
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function () { 
+                    videoElement.play().catch(e=>console.log("Play delay")); 
                 });
+
+                // Auto-Recovery Logic (হাল ছাড়বে না, রিকভার করার চেষ্টা করবে)
+                hls.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.log("Network error, recovering...");
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log("Media error, recovering...");
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                hls.destroy();
+                                break;
+                        }
+                    }
+                });
+
             } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
                 videoElement.src = channel.url;
-                videoElement.addEventListener('loadedmetadata', function () { videoElement.play(); });
-                videoElement.addEventListener('error', function() { showToast("এই চ্যানেলটি এখন অফলাইন আছে ⚠️"); });
+                videoElement.onloadedmetadata = function () { 
+                    videoElement.play().catch(e=>console.log("Play delay")); 
+                };
             }
             
             closeSidebar(); 
@@ -545,7 +582,7 @@
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('tv-focus'));
         }
 
-        // --- SMART SPATIAL TV NAVIGATION (Bug Fixed) ---
+        // --- SMART SPATIAL TV NAVIGATION ---
         function moveHomeFocus(direction) {
             const cards = Array.from(document.querySelectorAll('.card-focusable'));
             if(!cards.length) return;
@@ -570,7 +607,6 @@
             else if (direction === 'ArrowLeft') nextIndex--;
             else if (direction === 'ArrowDown') {
                 if (isRecent) {
-                    // Jump exactly to the correct column in 'All Channels'
                     nextIndex = recentCount + currentIndex; 
                     if (nextIndex >= cards.length) nextIndex = cards.length - 1;
                 } else {
@@ -581,7 +617,6 @@
                 if (!isRecent) {
                     const indexInGrid = currentIndex - recentCount;
                     if (indexInGrid < cols && recentCount > 0) {
-                        // Jump back to 'Recent' from the first row of All Channels
                         nextIndex = Math.min(indexInGrid, recentCount - 1);
                     } else {
                         nextIndex = currentIndex - cols;
@@ -642,7 +677,6 @@
                         break;
                     case 'ArrowLeft': 
                     case 'ArrowRight':
-                        // Dual Arrow Toggle Logic
                         if (isSidebarOpen) closeSidebar();
                         else openSidebar();
                         break;
@@ -680,7 +714,6 @@
             
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 if (Math.abs(diffX) > 50) {
-                    // Both left and right swipe will toggle the sidebar (Similar to button logic)
                     if (isSidebarOpen) closeSidebar();
                     else openSidebar();
                 }
